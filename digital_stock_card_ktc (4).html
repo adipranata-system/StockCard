@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Stock Card & Old Core - KTC TNPN & TTLP</title>
+
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#020617">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SheetJS (XLSX) CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- html2pdf.js CDN untuk Ekspor PDF Surat Jalan -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ktc: {
+              red: '#D92D20',
+              dark: '#1E293B',
+              card: '#FFFDF5',
+              cardBorder: '#D4AF37',
+              oldcore: '#FFF7ED',
+              oldcoreBorder: '#F97316'
+            }
+          },
+          boxShadow: {
+            'card-physic': '0 12px 30px -10px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08)',
+            'tactile': '0 4px 0 #9A3412',
+            'tactile-blue': '0 4px 0 #1E40AF',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Styling sensasi kartu fisik gantung */
+    .hole-punch {
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.4), 0 1px 1px rgba(255,255,255,0.8);
+    }
+    
+    .ledger-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .ledger-scroll::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    .ledger-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    .ledger-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* Highlight pilihan aktif pada combobox saat navigasi keyboard */
+    .combobox-item-active {
+      background-color: #FEF3C7 !important;
+      border-left: 4px solid #D97706 !important;
+      color: #78350F !important;
+    }
+    .combobox-item-active-orange {
+      background-color: #FFEDD5 !important;
+      border-left: 4px solid #EA580C !important;
+      color: #7C2D12 !important;
+    }
+
+    /* Indikator fokus tebal ramah mata saat pakai Tab keyboard */
+    input:focus, select:focus, button:focus {
+      outline: none;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* Sembunyikan semua elemen selain dokumen manifest */
+      body * {
+        visibility: hidden;
+      }
+      #printableManifestDocument, #printableManifestDocument * {
+        visibility: visible;
+      }
+      #printableManifestDocument {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 12mm 15mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: #ffffff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-200 pb-16 sm:pb-0">
+
+  <!-- ============================================================== -->
+  <!-- HEADER & NAVIGASI ATAS (DIOPTIMALKAN UNTUK HP & PC)            -->
+  <!-- ============================================================== -->
+  <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-30 shadow-md no-print">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5">
+      
+      <!-- Baris 1: Logo, Identitas & Aksi Cepat -->
+      <div class="flex items-center justify-between gap-2">
+        <!-- Logo & Judul Ringkas -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div class="h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-rose-600 flex items-center justify-center text-white font-black text-base sm:text-xl tracking-tighter shadow-inner shrink-0 overflow-hidden border border-rose-500/40">
+            <!-- Gambar Logo KTC dengan fallback ke teks -->
+            <img src="logo-ktc.png" alt="Logo KTC" class="w-full h-full object-contain p-1" onerror="this.onerror=null; this.parentElement.innerHTML='KTC';">
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="text-white font-black text-sm sm:text-lg tracking-tight truncate">STOCK CARD</span>
+              <span id="headerSiteIndicator" class="px-1.5 py-0.2 rounded text-[10px] font-black bg-amber-400 text-amber-950 sm:hidden">TNPN</span>
+            </div>
+            <p class="text-[10px] sm:text-xs text-slate-400 truncate hidden sm:block">
+              Monitoring Part Baru (Odoo) & Korelasi SJ Old Core (SKHQ) • Dikembangkan oleh 
+              <a href="https://www.linkedin.com/in/adi-pranata-86449658/" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 font-bold underline inline-flex items-center gap-1">
+                <i class="fa-brands fa-linkedin text-[11px]"></i> Adi Pranata
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <!-- Site Switcher & Action Buttons -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- SITE SWITCHER TOGGLE -->
+          <div class="bg-slate-900 p-0.5 sm:p-1 rounded-xl border border-slate-700 flex items-center shadow-inner">
+            <button id="siteBtnTNPN" onclick="switchSite('TNPN')" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-black transition-all bg-amber-400 text-amber-950 shadow-sm flex items-center gap-1">
+              <i class="fa-solid fa-building-circle-check text-[10px]"></i>
+              <span>TNPN</span>
+            </button>
+            <button id="siteBtnTTLP" onclick="switchSite('TTLP')" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1">
+              <i class="fa-solid fa-trowel-bricks text-[10px]"></i>
+              <span>TTLP</span>
+            </button>
+          </div>
+
+          <!-- Quick Search -->
+          <button onclick="toggleQuickSearchModal()" title="Cari Part (F2)" class="p-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-700 transition-all">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="hidden md:inline">Cari (F2)</span>
+          </button>
+
+          <!-- Sinkronisasi Odoo -->
+          <button onclick="openUploadModal()" class="p-2 sm:px-3.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all" title="Upload Data Odoo">
+            <i class="fa-solid fa-file-excel"></i>
+            <span class="hidden md:inline">Upload Odoo</span>
+          </button>
+
+          <!-- Print (Desktop only) -->
+          <button onclick="window.print()" title="Cetak Kartu" class="hidden sm:flex p-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs sm:text-sm font-bold border border-slate-700 transition-all">
+            <i class="fa-solid fa-print"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Baris 2: TAB SWITCHER SLEEK (RAMAH LAYAR HP) -->
+      <div class="mt-2.5 pt-1.5 border-t border-slate-800/80 flex gap-1.5 sm:gap-2">
+        <button id="tabBtnNewPart" onclick="switchAppTab('new-part')" class="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 py-2 sm:py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 border-amber-300 bg-[#FFFDF2] text-slate-900 shadow">
+          <i class="fa-solid fa-file-lines text-amber-600 text-xs sm:text-sm"></i>
+          <span class="truncate">PART BARU</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-mono font-bold hidden sm:inline">
+            Odoo
+          </span>
+        </button>
+
+        <button id="tabBtnOldCore" onclick="switchAppTab('old-core')" class="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 py-2 sm:py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 border-transparent bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white">
+          <i class="fa-solid fa-tag text-orange-500 text-xs sm:text-sm"></i>
+          <span class="truncate">OLD CORE</span>
+          <span id="oldCoreCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-500 text-white font-mono font-black">
+            4
+          </span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- BAR STATUS SINKRONISASI (SLEEK & 1 BARIS DI HP)               -->
+  <!-- ============================================================== -->
+  <div class="bg-slate-950/90 border-b border-slate-800/80 text-slate-400 text-[11px] py-1.5 px-3 sm:px-6 no-print">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 overflow-hidden">
+      <div class="flex items-center gap-1.5 truncate">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+        <span class="text-slate-400 font-medium truncate sm:hidden">Odoo Sync:</span>
+        <span id="tabStatusLeadText" class="font-semibold text-slate-300 hidden sm:inline">Cut-off Data Odoo (Part Baru):</span>
+        <span id="syncTimestamp" class="text-amber-300 font-mono font-bold truncate">08/11/26 07:30 WIB</span>
+      </div>
+      <div class="text-[10px] text-slate-500 hidden sm:flex items-center gap-2 shrink-0">
+        <span><i class="fa-solid fa-check text-emerald-400 mr-1"></i>Odoo Source</span>
+        <span>•</span>
+        <span><i class="fa-solid fa-arrow-right-arrow-left text-orange-400 mr-1"></i>Core Exchange</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- VIEW 1: KARTU STOK PART BARU (READ-ONLY ODOO)                  -->
+  <!-- ============================================================== -->
+  <div id="viewNewPart" class="flex-1 flex flex-col">
+    
+    <!-- Selector Item & Search Bar dengan COMBOBOX Keyboard Friendly -->
+    <div class="max-w-6xl w-full mx-auto p-2.5 sm:p-6 pb-0 no-print">
+      <div class="bg-slate-800/90 border border-slate-700 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-sm">
+        <div class="relative">
+          <label class="block text-[11px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-magnifying-glass text-amber-400"></i>
+              <span class="sm:hidden">Cari Part / Nama / Rak:</span>
+              <span class="hidden sm:inline">Cari / Pilih Part (Ketik Langsung & Navigasi Panah &darr; &uarr;):</span>
+            </span>
+            <span class="text-[10px] text-amber-400 font-mono hidden sm:inline">[Tekan Alt+P untuk Fokus]</span>
+          </label>
+
+          <!-- Input Combobox Part Baru -->
+          <div class="relative flex items-center">
+            <input 
+              type="text" 
+              id="partComboboxInput" 
+              autocomplete="off"
+              placeholder="Ketik PN, Nama Part, atau Kode Rak..." 
+              class="w-full bg-slate-900 border-2 border-amber-400 rounded-xl pl-3 pr-16 sm:pr-20 py-2 sm:py-2.5 text-xs sm:text-base font-bold text-white focus:ring-4 focus:ring-amber-400/40 focus:border-amber-300 transition-all shadow-inner"
+              oninput="handlePartComboboxInput(this.value)"
+              onfocus="openPartComboboxDropdown()"
+              onkeydown="handlePartComboboxKeydown(event)"
+            >
+            <!-- Tombol Hapus Cepat (X) -->
+            <button 
+              type="button" 
+              id="clearPartComboboxBtn" 
+              onclick="clearPartComboboxInput()" 
+              title="Hapus Semua Teks Pencarian" 
+              class="absolute right-8 sm:right-9 text-slate-400 hover:text-rose-400 p-1 text-sm transition-colors hidden"
+            >
+              <i class="fa-solid fa-circle-xmark text-base"></i>
+            </button>
+
+            <!-- Dropdown Chevron -->
+            <button type="button" onclick="togglePartComboboxDropdown()" class="absolute right-2 text-amber-400 hover:text-amber-300 px-1.5 py-1 text-sm">
+              <i id="partComboboxArrow" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+            </button>
+          </div>
+
+          <!-- Dropdown List Combobox Part Baru -->
+          <div 
+            id="partComboboxDropdown" 
+            class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border-2 border-amber-400 max-h-72 overflow-y-auto ledger-scroll z-40 hidden divide-y divide-slate-100"
+          >
+            <!-- Render via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KARTU FISIK GANTUNG (SKEUOMORPHIC STOCK CARD) -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-6 flex flex-col">
+      <div class="stock-card-container bg-[#FFFDF2] border-2 border-[#D4AF37] rounded-2xl sm:rounded-3xl shadow-card-physic p-3.5 sm:p-8 flex flex-col flex-1 relative overflow-hidden">
+        
+        <!-- Lubang Gantungan Kartu Fisik -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-9 sm:h-9 bg-slate-900 rounded-full hole-punch border-2 border-amber-600/40 hidden sm:block" title="Simulasi Lubang Gantungan Kartu Fisik"></div>
+
+        <!-- Header Kartu -->
+        <div class="border-b-2 border-amber-300/80 pb-3 sm:pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div class="w-full sm:w-auto">
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span class="px-2 py-0.5 bg-amber-400 text-amber-950 font-black text-[10px] sm:text-xs rounded tracking-wider uppercase">
+                KARTU STOK FISIK
+              </span>
+              <span class="text-[11px] sm:text-xs font-bold text-slate-600">
+                GUDANG <span id="cardSiteBadge" class="text-slate-900 font-black">SITE TNPN</span> • SATUAN: <span id="cardUom" class="text-slate-900 font-black">PC</span>
+              </span>
+              <span class="text-[10px] sm:text-xs text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-bold hidden xs:inline">
+                <i class="fa-solid fa-circle-check text-[9px] mr-1"></i>Odoo
+              </span>
+            </div>
+
+            <!-- Part Number Besar & Kontras -->
+            <div class="flex items-center gap-2 mt-1.5 sm:mt-2">
+              <h1 id="cardPartNumber" class="text-xl sm:text-4xl font-mono font-black text-slate-950 tracking-tight select-all">
+                [0001-367-004]
+              </h1>
+              <button onclick="copyPartNumber()" title="Salin Part Number" class="px-2 py-1 bg-amber-200/80 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0">
+                <i class="fa-regular fa-copy"></i>
+                <span class="hidden sm:inline">Salin</span>
+              </button>
+            </div>
+
+            <!-- Nama Barang Penuh (Tidak Terpotong) -->
+            <h2 id="cardPartDescription" class="text-sm sm:text-xl font-extrabold text-slate-800 mt-0.5 sm:mt-1 leading-snug">
+              STARTING MOTOR DEUTZ ENGINE
+            </h2>
+          </div>
+
+          <!-- Lokasi Rak & Saldo Besar -->
+          <div class="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+            <div class="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end bg-amber-100/70 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-amber-300">
+              <div>
+                <div class="text-[10px] sm:text-[11px] font-bold text-amber-900 uppercase tracking-wider">Lokasi Rak (Bin)</div>
+                <div id="cardBinLoc" class="text-lg sm:text-2xl font-mono font-black text-slate-950">
+                  G.01-10A-2
+                </div>
+              </div>
+
+              <div id="cardBalanceBox" class="bg-emerald-700 text-white border-2 border-emerald-900 rounded-xl sm:rounded-2xl px-3.5 sm:px-6 py-1.5 sm:py-2 text-center sm:text-right shadow-md min-w-[110px] sm:min-w-[130px]">
+                <div class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider opacity-90">Sisa (On Hand)</div>
+                <div class="text-2xl sm:text-4xl font-mono font-black tracking-tight flex items-baseline justify-center sm:justify-end gap-1">
+                  <span id="cardStockBalance">12</span>
+                  <span id="cardStockUnit" class="text-xs font-sans font-bold opacity-80 uppercase">PC</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- WIDGET CEK STOK DI SITE SEBELAH (CROSS-SITE VISIBILITY) -->
+            <div id="crossSiteStockBadge" class="bg-blue-50 border border-blue-300 text-blue-950 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-between sm:justify-end gap-2 sm:gap-3 shadow-sm w-full">
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-split-up-and-left text-blue-600 text-xs sm:text-sm"></i>
+                <span>Tersedia di <strong id="crossSiteName" class="underline">Site TTLP</strong>:</span>
+              </div>
+              <div class="font-mono font-black text-blue-900 text-xs sm:text-sm">
+                <span id="crossSiteQty">6</span> PC <span class="text-[10px] text-blue-600 font-sans font-normal">(<span id="crossSiteBin">R.02-B1</span>)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ringkasan Cepat Mutasi -->
+        <div class="grid grid-cols-3 gap-1.5 sm:gap-4 my-3 sm:my-5 py-2 sm:py-3 px-2 sm:px-4 bg-white/80 rounded-xl sm:rounded-2xl border border-amber-200 text-center font-mono">
+          <div>
+            <span class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block font-sans">Awal</span>
+            <span id="cardBeginningStock" class="text-sm sm:text-xl font-black text-slate-800">0</span>
+          </div>
+          <div class="border-x border-amber-200">
+            <span class="text-[10px] sm:text-[11px] font-bold text-emerald-700 uppercase block font-sans">Masuk</span>
+            <span id="cardTotalIncoming" class="text-sm sm:text-xl font-black text-emerald-700">15</span>
+          </div>
+          <div>
+            <span class="text-[10px] sm:text-[11px] font-bold text-rose-700 uppercase block font-sans">Keluar</span>
+            <span id="cardTotalOutgoing" class="text-sm sm:text-xl font-black text-rose-700">3</span>
+          </div>
+        </div>
+
+        <!-- Tabel Buku Besar Mutasi (Ledger) -->
+        <div class="flex-1 ledger-scroll overflow-x-auto -mx-1 sm:mx-0">
+          <table class="w-full text-left border-collapse min-w-[720px]">
+            <thead>
+              <tr class="bg-amber-200/80 border-b-2 border-amber-300 text-amber-950 text-xs sm:text-sm font-extrabold uppercase font-mono">
+                <th class="py-3 px-3 border-r border-amber-300 text-center w-12">No</th>
+                <th class="py-3 px-3 border-r border-amber-300 w-28">Tanggal</th>
+                <th class="py-3 px-3 border-r border-amber-300 w-44">No. Dokumen Odoo</th>
+                <th class="py-3 px-3 border-r border-amber-300">Unit / Keterangan Alokasi</th>
+                <th class="py-3 px-3 border-r border-amber-300 text-center w-24 text-emerald-800">Masuk (+)</th>
+                <th class="py-3 px-3 border-r border-amber-300 text-center w-24 text-rose-800">Keluar (-)</th>
+                <th class="py-3 px-3 border-r border-amber-300 text-center w-28 bg-amber-300/40">Sisa Stok</th>
+                <th class="py-3 px-3 text-center w-36">Nama Mekanik</th>
+              </tr>
+            </thead>
+            <tbody id="cardLedgerBody" class="divide-y divide-amber-200/80 text-sm sm:text-base font-medium">
+              <!-- Render via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer Kartu -->
+        <div class="mt-4 pt-3 border-t-2 border-amber-300/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-semibold gap-2">
+          <div>*Histori mutasi di atas bersumber dari transaksi tervalidasi di Odoo ERP.</div>
+          <div class="text-[11px] text-amber-800 font-mono font-bold">
+            Data Terverifikasi Odoo Single Source
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- FOOTER COPYRIGHT & DEVELOPER CREDITS -->
+    <footer class="mt-auto border-t border-slate-800 bg-slate-950 py-4 px-3 sm:px-6 text-slate-400 text-xs no-print">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+        <div>
+          <div class="text-slate-200 font-bold text-xs sm:text-sm">
+            Sistem Manajemen Kartu Stok & Old Core Tracking (TNPN & TTLP)
+          </div>
+          <div class="text-[11px] text-slate-400 mt-0.5">
+            Dirancang & Dikembangkan oleh: 
+            <a href="https://www.linkedin.com/in/adi-pranata-86449658/" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 font-extrabold underline inline-flex items-center gap-1">
+              <i class="fa-brands fa-linkedin text-xs"></i> Adi Pranata
+            </a>
+            <span class="text-slate-500 mx-1">•</span>
+            <span class="text-slate-400 font-mono">Inventory Systems Specialist</span>
+          </div>
+        </div>
+
+        <div class="text-[10px] text-slate-400 max-w-md leading-relaxed border-t md:border-t-0 md:border-l border-slate-800 pt-2 md:pt-0 md:pl-4 text-center md:text-right">
+          <div>&copy; 2026 PT. KTC Coal Mining & Energy. All Rights Reserved.</div>
+          <div class="mt-0.5 text-slate-400">
+            Karya cipta dilindungi oleh <strong class="text-slate-300">Undang-Undang Republik Indonesia No. 28 Tahun 2014 tentang Hak Cipta</strong>. Dilarang menggandakan, mendistribusikan, atau memodifikasi sistem ini tanpa izin tertulis dari pencipta.
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- VIEW 2: REGISTER OLD CORE (CORE EXCHANGE DENGAN SJ SKHQ)      -->
+  <!-- ============================================================== -->
+  <div id="viewOldCore" class="flex-1 flex flex-col hidden">
+    
+    <!-- Sub Header Old Core & Action Buttons -->
+    <div class="max-w-6xl w-full mx-auto p-3 sm:p-6 pb-0 no-print">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
+        <div>
+          <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+            <span>Pengembalian Komponen Bekas (Old Core Site &rarr; SKHQ)</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Hubungkan fisik part bekas dengan Surat Jalan Terima SKHQ & buat Surat Jalan Site pengiriman balik.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Tombol Catat Old Core Masuk dari Mekanik -->
+          <button onclick="openInputOldCoreModal()" class="flex-1 sm:flex-none px-4 py-2.5 bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-tactile transition-all">
+            <i class="fa-solid fa-plus-circle text-base"></i>
+            <span>+ CATAT OLD CORE MASUK</span>
+          </button>
+
+          <!-- Tombol Buat SJ Site Pengiriman ke SKHQ -->
+          <button onclick="openSendToSkhqModal()" class="flex-1 sm:flex-none px-4 py-2.5 bg-blue-700 hover:bg-blue-600 active:bg-blue-800 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-tactile-blue transition-all">
+            <i class="fa-solid fa-truck-ramp-box text-base"></i>
+            <span>KIRIM KE SKHQ</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONTEN OLD CORE -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 flex flex-col gap-5">
+
+      <!-- KARTU INDIKATOR STATUS OLD CORE (Ringkasan Cepat) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
+        <div class="bg-white border-2 border-orange-300 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-orange-700 uppercase tracking-wider">Di Palet TNPN (Belum Kirim)</div>
+            <div id="summaryCorePending" class="text-3xl font-mono font-black text-slate-900 mt-1">4 Unit</div>
+            <div class="text-[11px] text-slate-500">Fisik bekas ada di gudang, belum buat SJ Site</div>
+          </div>
+          <div class="h-12 w-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl font-bold">
+            <i class="fa-solid fa-warehouse"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border-2 border-blue-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Sudah Dikirim ke SKHQ</div>
+            <div id="summaryCoreSent" class="text-3xl font-mono font-black text-slate-900 mt-1">18 Unit</div>
+            <div class="text-[11px] text-slate-500">Sudah terbit Surat Jalan Site TNPN</div>
+          </div>
+          <div class="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold">
+            <i class="fa-solid fa-truck-fast"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border-2 border-rose-300 rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:bg-rose-50/50 transition-all" onclick="toggleSkhqOutstandingModal()">
+          <div>
+            <div class="text-xs font-bold text-rose-700 uppercase tracking-wider">SJ SKHQ Belum Ada Fisik Bekas</div>
+            <div id="summaryCoreDue" class="text-3xl font-mono font-black text-rose-600 mt-1">2 SJ</div>
+            <div class="text-[11px] text-rose-800 font-semibold underline">Lihat daftar hutang SJ SKHQ <i class="fa-solid fa-arrow-right text-[10px]"></i></div>
+          </div>
+          <div class="h-12 w-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-bold">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- KARTU FISIK REGISTER OLD CORE -->
+      <div class="stock-card-container bg-[#FFF8F0] border-2 border-[#E9C496] rounded-2xl sm:rounded-3xl shadow-card-physic overflow-hidden relative">
+        
+        <!-- Header Kartu Fisik Old Core -->
+        <div class="p-4 sm:p-5 border-b-2 border-orange-300 bg-orange-200/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="h-11 w-11 rounded-xl bg-orange-600 text-white flex items-center justify-center text-2xl shadow-sm">
+              <i class="fa-solid fa-tag"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-orange-700 text-white font-mono font-bold text-xs rounded uppercase">
+                  TAG CORE BEKAS
+                </span>
+                <span class="text-xs font-bold text-orange-900">Site TNPN &rarr; SKHQ Core Return Matching</span>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-mono font-black text-slate-900 mt-0.5">
+                REGISTER OLD CORE (LINK SJ SKHQ & SJ SITE)
+              </h3>
+            </div>
+          </div>
+
+          <!-- Filter Status Old Core -->
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <select id="filterOldCoreStatus" onchange="renderOldCoreTable()" class="bg-white border-2 border-orange-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-slate-800 shadow-sm focus:outline-none">
+            <option value="ALL">Semua Data Old Core</option>
+            <option value="PENDING" selected>Khusus: Transit di Gudang (Belum Kirim)</option>
+            <option value="SENT">Khusus: Sudah Ada SJ Site TNPN</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tampilan Kartu Khusus HP & Tabel Desktop -->
+      <div id="oldCoreMobileCardList" class="sm:hidden space-y-3 p-3">
+        <!-- Render kartu vertikal via JS -->
+      </div>
+      <div class="hidden sm:block ledger-scroll overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[950px]">
+          <thead>
+            <tr class="bg-orange-200/80 border-b-2 border-orange-300 text-orange-950 text-xs sm:text-sm font-extrabold uppercase font-mono">
+              <th class="py-3 px-3 border-r border-orange-300 text-center w-12">No</th>
+              <th class="py-3 px-3 border-r border-orange-300 w-28">Tgl Terima</th>
+              <th class="py-3 px-3 border-r border-orange-300 w-44">Part Number</th>
+              <th class="py-3 px-3 border-r border-orange-300">Deskripsi Part & Kondisi</th>
+              <th class="py-3 px-3 border-r border-orange-300 w-24 text-center">Unit</th>
+              <th class="py-3 px-3 border-r border-orange-300 w-36">Asal SJ SKHQ</th>
+              <th class="py-3 px-3 border-r border-orange-300 w-36">Posisi Rak/Palet</th>
+              <th class="py-3 px-3 text-center w-48">SJ Kirim Site / Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="oldCoreTableBody" class="divide-y divide-orange-200 text-sm sm:text-base font-medium">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Old Core -->
+        <div class="p-4 bg-orange-100/60 border-t-2 border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-orange-900 font-semibold">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-orange-700 text-sm"></i>
+            <span>Setiap barang bekas yang tiba langsung dipasangkan ke Surat Jalan Terima SKHQ agar tercatat lunas di pusat.</span>
+          </div>
+          <div>
+            <span>Siklus: <strong>Terima SJ SKHQ &rarr; Terima Fisik Bekas &rarr; Buat SJ Kirim Site</strong></span>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: INPUT PENERIMAAN OLD CORE (LINK DENGAN SJ SKHQ)         -->
+  <!-- ============================================================== -->
+  <div id="inputOldCoreModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 my-auto">
+      <div class="px-5 py-4 bg-orange-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-recycle"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base sm:text-lg">Penerimaan Fisik Old Core</h3>
+            <p class="text-xs text-orange-100">Bisa cari lewat Nomor Unit, Part Number, atau SJ SKHQ</p>
+          </div>
+        </div>
+        <button onclick="closeInputOldCoreModal()" class="text-white/80 hover:text-white p-1 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="formOldCore" onsubmit="saveNewOldCore(event)" class="p-5 space-y-4">
+        <!-- Dropdown Pilih Asal Surat Jalan SKHQ diganti COMBOBOX -->
+        <div class="relative">
+          <label class="block text-xs font-bold text-slate-800 uppercase mb-1 flex items-center justify-between">
+            <span>Asal Surat Jalan SKHQ * <span class="text-orange-600 font-normal lowercase">(Bisa ketik no SJ / unit / cari manual)</span></span>
+            <span class="text-[10px] text-slate-500 font-mono hidden sm:inline">[Gunakan $\downarrow \uparrow$ lalu Enter]</span>
+          </label>
+
+          <div class="relative">
+            <input 
+              type="text" 
+              id="skhqComboboxInput" 
+              autocomplete="off"
+              placeholder="Ketik Nomor SJ (misal: SJ-SKHQ-01) atau pilih dari daftar..." 
+              class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl pl-3.5 pr-10 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:border-orange-500 focus:ring-4 focus:ring-orange-400/30 transition-all focus:bg-white enter-nav"
+              oninput="handleSkhqComboboxInput(this.value)"
+              onfocus="openSkhqComboboxDropdown()"
+              onkeydown="handleSkhqComboboxKeydown(event)"
+            >
+            <button type="button" onclick="toggleSkhqComboboxDropdown()" class="absolute right-2.5 top-2.5 text-slate-500 hover:text-orange-600 px-2 py-0.5 text-sm">
+              <i id="skhqComboboxArrow" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+            </button>
+          </div>
+
+          <!-- Dropdown List Combobox SJ SKHQ -->
+          <div 
+            id="skhqComboboxDropdown" 
+            class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border-2 border-orange-400 max-h-56 overflow-y-auto ledger-scroll z-40 hidden divide-y divide-orange-100"
+          >
+            <!-- Render via JS -->
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tanggal Terima Fisik *</label>
+            <input type="date" id="inputCoreDate" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Copotan dari Unit ID *</label>
+            <input type="text" id="inputCoreUnit" placeholder="Contoh: 1110, 27125" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-bold uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+          </div>
+        </div>
+
+        <!-- Part Number -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Part Number Komponen Bekas *</label>
+          <input type="text" id="inputCorePart" placeholder="Contoh: [0001-367-004]" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-bold text-slate-800 focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Deskripsi Nama Komponen</label>
+          <input type="text" id="inputCoreDesc" placeholder="Contoh: STARTING MOTOR 24V DEUTZ" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Jumlah (Qty) *</label>
+            <input type="number" id="inputCoreQty" value="1" min="1" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-lg font-mono font-bold text-center focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lokasi Palet / Rak Bekas</label>
+            <input type="text" id="inputCoreBin" placeholder="Contoh: PALET-CORE-01" value="PALET-CORE-01" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+          </div>
+        </div>
+
+        <!-- Foto Fisik Barang: Pilihan Langsung Jepret atau Galeri -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Foto Bukti Fisik Komponen</label>
+            
+            <!-- Wadah Jika Belum Ada Foto: Dua Tombol (Kamera Jepret vs Galeri) -->
+            <div id="photoEmptyState" class="grid grid-cols-2 gap-2">
+              <button 
+                type="button" 
+                onclick="openLiveCameraModal()" 
+                class="flex flex-col items-center justify-center p-2.5 bg-orange-50 hover:bg-orange-100 border-2 border-orange-400 hover:border-orange-500 text-orange-900 rounded-xl font-bold text-xs shadow-sm transition-all text-center"
+              >
+                <i class="fa-solid fa-camera text-orange-600 text-lg mb-1"></i>
+                <span>Kamera Jepret</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="triggerGalleryPicker()" 
+                class="flex flex-col items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 hover:border-slate-400 text-slate-700 rounded-xl font-bold text-xs transition-all text-center"
+              >
+                <i class="fa-solid fa-images text-slate-500 text-lg mb-1"></i>
+                <span>Dari Galeri</span>
+              </button>
+
+              <!-- Hidden inputs untuk fallback file picker & native camera -->
+              <input type="file" id="inputCorePhotoGallery" accept="image/*" onchange="handleFilePhotoSelected(this)" class="hidden">
+              <input type="file" id="inputCorePhotoNativeCamera" accept="image/*" capture="environment" onchange="handleFilePhotoSelected(this)" class="hidden">
+            </div>
+
+            <!-- Wadah Pratinjau Jika Foto Sudah Dijepret / Diunggah -->
+            <div id="photoCapturedState" class="hidden flex items-center justify-between p-2 bg-emerald-50 border-2 border-emerald-400 rounded-xl">
+              <div class="flex items-center gap-2.5">
+                <img id="photoThumbImg" src="" alt="Thumbnail" class="w-12 h-10 object-cover rounded-lg border border-emerald-300">
+                <div>
+                  <div class="text-xs font-bold text-emerald-950 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>Foto Tersimpan</span>
+                  </div>
+                  <div id="photoMetaText" class="text-[10px] text-slate-500 font-mono">Siap masuk SJ</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="openLiveCameraModal()" class="px-2 py-1 bg-white hover:bg-orange-50 text-orange-700 text-xs font-bold rounded-lg border border-orange-300" title="Jepret Ulang">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button type="button" onclick="removeCapturedPhoto()" class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-700 text-xs font-bold rounded-lg border border-rose-300" title="Hapus Foto">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Kondisi Kerusakan</label>
+            <input type="text" id="inputCoreRemark" placeholder="Contoh: Gulungan hangus, bendix rontok" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeInputOldCoreModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm focus:ring-2 focus:ring-slate-400">
+            Batal
+          </button>
+          <button type="submit" id="submitOldCoreBtn" class="flex-1 py-3 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-black rounded-xl text-sm shadow-tactile transition-all focus:ring-4 focus:ring-orange-400">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> SIMPAN PENERIMAAN
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: KAMERA LANGSUNG JEPRET (LIVE CAMERA VIEWFINDER)         -->
+  <!-- ============================================================== -->
+  <div id="liveCameraModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex flex-col items-center justify-between p-3 sm:p-5 hidden">
+    <!-- Header Kamera -->
+    <div class="w-full max-w-lg flex items-center justify-between text-white py-2">
+      <div class="flex items-center gap-2 font-bold text-sm sm:text-base">
+        <i class="fa-solid fa-camera text-orange-500 text-lg"></i>
+        <span>Kamera Old Core (Langsung Jepret)</span>
+      </div>
+      <button type="button" onclick="closeLiveCameraModal()" class="text-white/80 hover:text-white p-2 text-2xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Area Bidik Kamera (Live Viewfinder Video) -->
+    <div class="relative w-full max-w-lg flex-1 bg-black rounded-2xl overflow-hidden flex items-center justify-center border-2 border-slate-700 shadow-2xl">
+      <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+      <canvas id="cameraCanvas" class="hidden"></canvas>
+
+      <!-- Frame Panduan Komponen -->
+      <div class="absolute inset-4 sm:inset-8 border-2 border-dashed border-white/40 rounded-2xl pointer-events-none flex flex-col items-center justify-between p-3">
+        <span class="text-white text-[11px] font-bold uppercase tracking-wider bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-sm">
+          Arahkan Kamera ke Komponen Bekas
+        </span>
+        <span class="text-white/60 text-[10px] font-mono bg-black/40 px-2 py-0.5 rounded">
+          Pastikan kondisi fisik & pelat terlihat jelas
+        </span>
+      </div>
+    </div>
+
+    <!-- Kontrol Tombol Jepret -->
+    <div class="w-full max-w-lg py-4 flex items-center justify-around">
+      <!-- Tombol Putar Kamera Depan/Belakang -->
+      <button type="button" onclick="toggleCameraFacing()" title="Putar Kamera" class="text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-900 p-3 rounded-full text-base w-12 h-12 flex items-center justify-center shadow-lg border border-slate-600">
+        <i class="fa-solid fa-camera-rotate"></i>
+      </button>
+
+      <!-- Tombol Shutter Jepret Besar -->
+      <button type="button" onclick="captureLiveSnapshot()" title="Jepret Foto" class="w-20 h-20 bg-white hover:bg-slate-100 rounded-full border-4 border-orange-500 shadow-2xl flex items-center justify-center active:scale-90 transition-transform p-1">
+        <div class="w-16 h-16 rounded-full bg-orange-600 flex items-center justify-center text-white text-2xl shadow-inner">
+          <i class="fa-solid fa-camera"></i>
+        </div>
+      </button>
+
+      <!-- Fallback ke Kamera Bawaan HP -->
+      <button type="button" onclick="triggerNativeCameraInput()" title="Buka Kamera Bawaan HP" class="text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-900 p-2.5 rounded-full text-xs font-bold flex flex-col items-center justify-center h-12 w-12 shadow-lg border border-slate-600">
+        <i class="fa-solid fa-mobile-screen text-sm"></i>
+        <span class="text-[8px] uppercase mt-0.5">HP Cam</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PREVIEW & CETAK SURAT JALAN OLD CORE LENGKAP FOTO (A4)   -->
+  <!-- ============================================================== -->
+  <div id="printManifestModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-300 my-auto flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Header (no-print) -->
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between no-print border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-xl bg-orange-600 flex items-center justify-center text-white text-lg">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base">Pratinjau Surat Jalan Pengiriman Old Core ke SKHQ</h3>
+            <p class="text-xs text-slate-400">Format resmi lengkap foto fisik & referensi SJ SKHQ (Siap Cetak / PDF A4)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Tombol Download PDF Langsung -->
+          <button onclick="downloadManifestPdf()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow transition-all">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+          </button>
+          <!-- Tombol Cetak / Print -->
+          <button onclick="printManifestDocument()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow transition-all">
+            <i class="fa-solid fa-print"></i> Cetak Dokumen
+          </button>
+          <button onclick="closePrintManifestModal()" class="text-slate-400 hover:text-white p-1 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- AREA DOKUMEN CETAK SURAT JALAN (A4 LAYOUT) -->
+      <div id="printableManifestDocument" class="p-6 sm:p-8 overflow-y-auto ledger-scroll bg-white text-slate-900 font-sans flex-1">
+        
+        <!-- Header Perusahaan & Surat Jalan -->
+        <div class="border-b-2 border-slate-900 pb-4 mb-4 flex justify-between items-start">
+          <div class="flex items-start gap-3">
+            <div class="h-12 w-12 bg-rose-600 text-white font-black text-2xl flex items-center justify-center rounded-lg">
+              KTC
+            </div>
+            <div>
+              <h1 class="text-xl font-black tracking-tight text-slate-950">PT. KTC COAL MINING & ENERGY</h1>
+              <p class="text-xs font-semibold text-slate-600">Site TNPN Warehouse - Department Maintenance & Inventory</p>
+              <p class="text-[11px] text-slate-500">Tanjung Palas - Kalimantan Utara</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs uppercase font-extrabold text-orange-700 tracking-wider">SURAT JALAN PENGEMBALIAN OLD CORE</div>
+            <div id="manifestDocNumber" class="text-lg font-mono font-black text-slate-950 mt-0.5">SJ-SITE-05</div>
+            <div class="text-xs text-slate-600 mt-1">Tanggal: <span id="manifestDocDate" class="font-bold">08/11/2026</span></div>
+          </div>
+        </div>
+
+        <!-- Info Tujuan & Ekspedisi -->
+        <div class="grid grid-cols-2 gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-4">
+          <div>
+            <div class="text-slate-500 font-bold uppercase text-[10px]">Tujuan Pengiriman:</div>
+            <div class="font-extrabold text-slate-900 text-sm mt-0.5">CENTRAL LOGISTICS / SKHQ WAREHOUSE</div>
+            <div class="text-slate-600">Up: Bagian Core Exchange & Rekondisi Komponen</div>
+          </div>
+          <div>
+            <div class="text-slate-500 font-bold uppercase text-[10px]">Keterangan Pengangkutan:</div>
+            <div class="font-bold text-slate-800 mt-0.5">Ekspedisi: <span id="manifestTransporter" class="font-mono text-slate-950">TRUK LOGISTIK TNPN</span></div>
+            <div class="text-slate-600">Tipe Muatan: Komponen, Sensor & Pompa Bekas (Ex-Alat Berat)</div>
+          </div>
+        </div>
+
+        <!-- Tabel Manifest Old Core Lengkap Foto -->
+        <table class="w-full text-left border-collapse border border-slate-300 text-xs mb-6">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-300 text-slate-900 font-extrabold uppercase font-mono text-[11px]">
+              <th class="py-2.5 px-2 border border-slate-300 text-center w-8">No</th>
+              <th class="py-2.5 px-2 border border-slate-300 text-center w-28">Foto Fisik</th>
+              <th class="py-2.5 px-3 border border-slate-300 w-40">Part Number & Deskripsi</th>
+              <th class="py-2.5 px-2 border border-slate-300 text-center w-20">Unit Asal</th>
+              <th class="py-2.5 px-2 border border-slate-300 text-center w-28">Asal SJ SKHQ</th>
+              <th class="py-2.5 px-2 border border-slate-300 text-center w-12">Qty</th>
+              <th class="py-2.5 px-3 border border-slate-300">Kondisi / Alasan Pengembalian</th>
+            </tr>
+          </thead>
+          <tbody id="manifestTableBody" class="divide-y divide-slate-200">
+            <!-- Disuntikkan via JS -->
+          </tbody>
+        </table>
+
+        <!-- Area Tanda Tangan Resmi (3 Pihak) -->
+        <div class="grid grid-cols-3 gap-4 text-center text-xs pt-4 border-t border-slate-300">
+          <div>
+            <div class="text-slate-500 font-semibold mb-12">Disiapkan Oleh (Storeman TNPN):</div>
+            <div class="border-b border-slate-400 w-36 mx-auto"></div>
+            <div class="font-bold text-slate-800 mt-1">( ................................... )</div>
+            <div class="text-[10px] text-slate-500">Warehouse Site</div>
+          </div>
+          <div>
+            <div class="text-slate-500 font-semibold mb-12">Dibawa Oleh (Driver / Ekspedisi):</div>
+            <div class="border-b border-slate-400 w-36 mx-auto"></div>
+            <div class="font-bold text-slate-800 mt-1">( ................................... )</div>
+            <div class="text-[10px] text-slate-500">Sopir / Logistik</div>
+          </div>
+          <div>
+            <div class="text-slate-500 font-semibold mb-12">Diterima & Diverifikasi (SKHQ):</div>
+            <div class="border-b border-slate-400 w-36 mx-auto"></div>
+            <div class="font-bold text-slate-800 mt-1">( ................................... )</div>
+            <div class="text-[10px] text-slate-500">Logistik SKHQ Pusat</div>
+          </div>
+        </div>
+
+        <div class="mt-6 text-[10px] text-slate-400 italic text-center">
+          *Dokumen ini sah sebagai tanda terima pengembalian Old Core / Core Exchange antara Site TNPN dan SKHQ.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: INPUT MANUAL SURAT JALAN SITE KE SKHQ                   -->
+  <!-- ============================================================== -->
+  <div id="sendToSkhqModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 my-auto">
+      <div class="px-5 py-4 bg-blue-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-truck-fast"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base sm:text-lg">Kirim Old Core ke SKHQ</h3>
+            <p class="text-xs text-blue-100">Pilih item yang akan dimuat & input nomor Surat Jalan</p>
+          </div>
+        </div>
+        <button onclick="closeSendToSkhqModal()" class="text-white/80 hover:text-white p-1 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
+              No. Surat Jalan Site TNPN * <span class="text-blue-600 font-normal lowercase">(manual)</span>
+            </label>
+            <input type="text" id="inputSiteSjNumber" placeholder="Contoh: SJ-SITE-05" required class="w-full bg-slate-50 border-2 border-blue-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-slate-900 uppercase focus:outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tanggal Surat Jalan Kirim *</label>
+            <input type="date" id="inputSkhqDate" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold focus:border-blue-600 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- DAFTAR ITEM OLD CORE DAPAT DIPILIH (MULTI-SELECT CHECKBOX) -->
+        <div class="bg-blue-50/70 border-2 border-blue-200 rounded-2xl p-3 sm:p-4">
+          <div class="flex items-center justify-between mb-2 pb-2 border-b border-blue-200">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-blue-950 uppercase tracking-wider">
+                Pilih Komponen yang Dikirim:
+              </span>
+              <span id="dispatchSelectedCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white font-mono">
+                0 Dipilih
+              </span>
+            </div>
+
+            <!-- Tombol Pilih Semua -->
+            <label class="flex items-center gap-1.5 text-xs font-bold text-blue-800 cursor-pointer hover:text-blue-950 select-none">
+              <input type="checkbox" id="selectAllDispatchCheckbox" onchange="toggleSelectAllDispatch(this.checked)" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+              <span>Pilih Semua</span>
+            </label>
+          </div>
+
+          <!-- List Checkbox Item -->
+          <div id="dispatchItemsSelectionList" class="max-h-56 overflow-y-auto ledger-scroll space-y-2 pr-1">
+            <!-- Disuntikkan via JS -->
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="closeSendToSkhqModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all">
+            Batal
+          </button>
+          <button type="button" onclick="confirmDispatchToSkhq()" class="flex-1 py-2.5 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-black rounded-xl text-sm shadow-tactile-blue transition-all">
+            <i class="fa-solid fa-paper-plane mr-1"></i> SIMPAN & BUKA SURAT JALAN
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: LIHAT HUTANG SURAT JALAN TERIMA SKHQ                    -->
+  <!-- ============================================================== -->
+  <div id="skhqOutstandingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200">
+      <div class="px-5 py-4 bg-rose-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base sm:text-lg">Surat Jalan SKHQ Menunggu Core</h3>
+            <p class="text-xs text-rose-100">Daftar part SKHQ yang barang bekasnya belum diterima di gudang</p>
+          </div>
+        </div>
+        <button onclick="toggleSkhqOutstandingModal()" class="text-white/80 hover:text-white p-1 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 max-h-[400px] overflow-y-auto space-y-3">
+        <div id="skhqOutstandingListContainer" class="space-y-2.5">
+          <!-- Render via JS -->
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-slate-100 border-t border-slate-200 text-right">
+        <button onclick="toggleSkhqOutstandingModal()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: UPLOAD DATA DARI ODOO                                  -->
+  <!-- ============================================================== -->
+  <div id="uploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+      <div class="px-5 py-4 bg-emerald-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base">Sinkron Data Odoo Harian</h3>
+            <p class="text-xs text-emerald-100">Upload file ekspor Excel/CSV dari Odoo</p>
+          </div>
+        </div>
+        <button onclick="closeUploadModal()" class="text-white/80 hover:text-white p-1 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- Area Drag & Drop -->
+        <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50 transition-colors cursor-pointer">
+          <input type="file" id="odooFileInput" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(event)" class="hidden">
+          <label for="odooFileInput" class="cursor-pointer">
+            <i class="fa-solid fa-file-excel text-4xl text-emerald-600 mb-2"></i>
+            <div class="font-bold text-slate-800 text-sm">Pilih File Ekspor Odoo</div>
+            <div class="text-xs text-slate-400 mt-1">atau tarik & lepas file ke kotak ini (.xlsx / .csv)</div>
+          </label>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
+          <div class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i>Format Kolom Ekspor Odoo:</div>
+          <div>Part Number, Deskripsi, Satuan (UOM), Bin Location, On Hand Qty, Transaksi Masuk/Keluar.</div>
+        </div>
+
+        <!-- Tombol Demo Simulasi -->
+        <div class="pt-2">
+          <button onclick="simulateOdooUploadToday()" class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+            <i class="fa-solid fa-bolt text-emerald-600"></i>
+            <span>Simulasi Cepat: Update Mutasi Hari Ini (8 Nov)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: GLOBAL SEARCH (F2)                                      -->
+  <!-- ============================================================== -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 pt-16 sm:pt-24 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200">
+      <div class="p-4 border-b border-slate-200 flex items-center gap-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-lg ml-2"></i>
+        <input type="text" id="globalSearchInput" oninput="filterQuickSearch(this.value)" placeholder="Ketik Part Number, Nama Barang, atau Kode Rak..." class="w-full text-base sm:text-lg font-bold text-slate-900 focus:outline-none">
+        <button onclick="toggleQuickSearchModal()" class="text-slate-400 hover:text-slate-600 p-2 text-sm font-bold">
+          [ESC]
+        </button>
+      </div>
+      <div id="quickSearchResults" class="max-h-[350px] overflow-y-auto p-2 ledger-scroll divide-y divide-slate-100">
+        <!-- Render via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700">
+    <div id="toastIcon" class="text-lg text-emerald-400">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div id="toastMessage" class="text-xs sm:text-sm font-bold">Data berhasil diperbarui!</div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PEMANGGILAN ENGINE LOGIKA EKSTERNAL (app.js)                  -->
+  <!-- ============================================================== -->
+  <script src="app.js"></script>
+</body>
+</html>
