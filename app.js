@@ -950,14 +950,18 @@ function executeOldCoreCsvExport() {
     'Dispatch Date'
   ];
 
+  // Gunakan pemisah Titik Koma (;) standar Excel Indonesia & kutip ganda yang aman
+  const delimiter = ';';
   const escapeCsv = (val) => {
     if (val === null || val === undefined) return '""';
-    const s = String(val).replace(/"/g, '""');
+    const s = String(val).replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
     return `"${s}"`;
   };
 
   const csvRows = [];
-  csvRows.push(headers.map(h => escapeCsv(h)).join(','));
+  // Instruksi resmi Microsoft Excel untuk mengenali delimiter titik koma secara otomatis
+  csvRows.push('sep=;');
+  csvRows.push(headers.map(h => escapeCsv(h)).join(delimiter));
 
   filtered.forEach(item => {
     const row = [
@@ -975,7 +979,7 @@ function executeOldCoreCsvExport() {
       item.sjSiteNumber || '',
       item.dateSent || ''
     ];
-    csvRows.push(row.map(cell => escapeCsv(cell)).join(','));
+    csvRows.push(row.map(cell => escapeCsv(cell)).join(delimiter));
   });
 
   const csvContent = '\uFEFF' + csvRows.join('\r\n');
