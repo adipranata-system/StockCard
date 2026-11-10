@@ -287,49 +287,100 @@ function isConsumableOrNonCore(partNumber, description, uom) {
   const pn = String(partNumber || '').toUpperCase().trim();
   const uomUp = String(uom || '').toUpperCase().trim();
 
-  // 1. Cek Part Number yang Diawali Kode Pelumas / Kimia
-  if (/^(OIL-|LUB-|GREASE-|FLUID-|CHEM-)/.test(pn)) {
+  // 1. Cek Part Number yang Diawali Kode Pelumas / Kimia / Gas / Cat
+  if (/^(OIL-|LUB-|GREASE-|FLUID-|CHEM-|GAS-|PAINT-|BAT-)/.test(pn)) {
     return true;
   }
 
-  // 2. Cek Satuan Curah / Cairan / Panjang (Bulk & Fluid UOM)
-  const fluidBulkUoms = ['LTR', 'LITER', 'MTR', 'METER', 'DRUM', 'PAIL', 'CAN', 'BTL', 'KG', 'ROLL', 'TUBE'];
+  // 2. Cek Satuan Curah / Cairan / Panjang / Tabung (Bulk, Fluid, Gas & Roll UOM)
+  const fluidBulkUoms = ['LTR', 'LITER', 'MTR', 'METER', 'DRUM', 'PAIL', 'CAN', 'BTL', 'KG', 'ROLL', 'TUBE', 'CYL', 'TBNG', 'BKS', 'SAK'];
   if (fluidBulkUoms.includes(uomUp)) return true;
 
   // 3. Pengecekan Khusus Pelumas & Minyak (Oil & Lubricants Watertight Check)
-  // Menangkap variasi: OIL HYDRAULIC, HYDRAULIC OIL, OIL COMPRESSOR, OIL ENGINE, GEAR OIL, dll.
   if (/\b(OIL|PELUMAS|LUBRICANT|LUBRICATION|FLUID|GREASE|DIESEL|SOLAR|COOLANT)\b/.test(desc) ||
       /\b(DTE|MOBIL|SHELL|MEDITRAN|TELLUS|ROTELLA|RIMULA|DELVAC|CALTEX|CASTROL|ATF)\b/.test(desc)) {
     
     // Pengecualian Komponen Fisik Mesin yang Mengandung Kata "OIL"
     const isPhysicalOilComponent = /\b(OIL PUMP|PUMP,? OIL|OIL COOLER|COOLER,? OIL|OIL PAN|OIL TANK|OIL LEVEL SENSOR|OIL PRESSURE SENSOR|OIL SWITCH)\b/.test(desc);
     
-    // Jika BUKAN pompa oli, cooler oli, atau tangki oli fisik -> 100% adalah minyak/cairan habis pakai
     if (!isPhysicalOilComponent) {
       return true;
     }
   }
 
-  // 4. Pola Barang Habis Pakai, Hardware Aus & Scrap Lokal Lainnya
+  // 4. Pengecekan Khusus Valve Core (Tanpa Mengabaikan Control/Relief/Solenoid Valve)
+  if (/\b(VALVE CORE|CORE VALVE|PENTIL)\b/.test(desc)) {
+    return true;
+  }
+
+  // 5. Pola Lengkap Barang Habis Pakai, Material Bengkel, Cat, Gas, & Perlengkapan Aus
   const consumablePatterns = [
+    // Fastener & Hardware
     /\bBOLT\b/, /\bNUT\b/, /\bWASHER\b/, /\bSCREW\b/, /\bSTUD\b/, /\bCOTTER\b/, /\bPIN LOCK\b/,
+    /\bPAKU\b/, /\bNAIL\b/, /\bCABLE TIE(S)?\b/, /\bTIE WRAP\b/,
+    
+    // Plumbing, Selang, Fitting
     /\bHOSE\b/, /\bFITTING\b/, /\bADAPTOR\b/, /\bADAPTER\b/, /\bNIPPLE\b/, /\bCLAMP\b/, /\bFLANGE\b/, /\bELBOW\b/, /\bCOUPLING\b/,
+    
+    // GET (Ground Engaging Tools)
     /\bTOOTH\b/, /\bCUTTING EDGE\b/, /\bEND BIT\b/, /\bSIDE CUTTER\b/,
+    
+    // Filter & Elemen
     /\bFILTER\b/, /\bELEMENT\b/, /\bCARTRIDGE\b/, /\bSTRAINER\b/,
-    /\bFUSE\b/, /\bRELAY\b/, /\bBULB\b/, /\bBOHLAM\b/, /\bLAMP\b/, /\bWIRING TAPE\b/, /\bCABLE TIE\b/,
-    /\bO-RING\b/, /\bSEAL\b/, /\bGASKET\b/, /\bPACKING\b/, /\bV-BELT\b/, /\bFAN BELT\b/, /\bWIPER BLADE\b/,
-    /\bBRAKE FLUID\b/, /\bDEGREASER\b/, /\bCLEANER\b/, /\bSEALANT\b/, /\bLOCTITE\b/, /\bMAJUN\b/, /\bRAGS\b/
+    
+    // Elektrikal & Wiring Consumables
+    /\bFUSE\b/, /\bRELAY\b/, /\bBULB\b/, /\bBOHLAM\b/, /\bLAMP\b/, /\bWIRING TAPE\b/,
+    /\b(TAPE ELECTRIC|ELECTRICAL TAPE|ISOLASI|LAKBAN|DUCT TAPE|MASKING TAPE)\b/,
+    /\b(SCUN CABLE|SKUN CABLE|SKUN|SCUN|CABLE LUG|TERMINAL LUG)\b/,
+    /\b(TIMAH SOLDER|TIMAH|SOLDER WIRE)\b/,
+    /\b(SELONGSONG|HEAT SHRINK|SHRINK TUBE|LOOM|CONDUIT)\b/,
+    /\b(BATTERY|BATERAI|ACCU|AKI)\b/,
+    
+    // Seal, Karet, Belt & Wiper
+    /\bO-RING\b/, /\bSEAL\b/, /\bGASKET\b/, /\bPACKING\b/,
+    /\b(V-BELT|V BELT|FAN BELT|TIMING BELT|BELT)\b/, /\bWIPER BLADE\b/,
+    
+    // Ban & Roda
+    /\b(TYRE|TIRE|BAN LUAR|BAN DALAM|FLAP TYRE)\b/,
+    
+    // Cat, Dempul, Thinner & Perlengkapan Pengecatan
+    /\b(CAT|PAINT|SPRAY PAINT|PYLOX|DANAGLOSS|TOP COLOR|SUPER BLACK STEEL GLOSS)\b/,
+    /\b(THINNER|TINER)\b/,
+    /\b(DEMPUL|PUTTY|BODY FILLER)\b/,
+    /\b(EPOXY|EPOKSI)\b/,
+    /\b(KUAS|PAINT BRUSH|ROLLER CAT)\b/,
+    
+    // Lem, Perekat & Silicone Sealant
+    /\b(ALTECO|LEM|GLUE|THREE BOND|THREEBOND|SILICONE|SILIKON|SEALANT|LOCTITE)\b/,
+    
+    // Abrasif, Gerinda & Sikat Pembersih
+    /\b(AMPLAS|SANDPAPER|ABRASIVE)\b/,
+    /\b(GRIND DISC|GRINDING DISC|CUTTING DISC|BATU GERINDA|MATA GERINDA)\b/,
+    /\b(CUP BRUSH|WIRE BRUSH|SIKAT MANGKOK|SIKAT KAWAT)\b/,
+    
+    // Bahan Kimia, Cairan Pembersih & Aki
+    /\b(AIR ZUUR|ZUUR|AIR AKI|ELECTROLYTE)\b/,
+    /\b(SABUN|SOAP|DETERGENT|DISHWASH|SUNLIGHT|RINSO)\b/,
+    /\b(BRAKE FLUID|DEGREASER|CLEANER|MAJUN|RAGS)\b/,
+    
+    // Pengelasan & Gas Industri
+    /\b(WELDING|ELECTRODE|ELEKTRODA|KAWAT LAS)\b/,
+    /\b(GAS ACETYLENE|ACETYLENE|ASETILEN|KARBIT|OXYGEN GAS|ARGON)\b/,
+    
+    // Material Logam Mentah & Pembungkus
+    /\b(BESI|STEEL BAR|HOLLOW PIPE|PLAT BESI|BESI SIKU)\b/,
+    /\b(PLASTIK|PLASTIC|KANTONG PLASTIK|STRETCH FILM)\b/
   ];
 
   for (const pattern of consumablePatterns) {
     if (pattern.test(desc)) {
-      // Pengecekan Aman: Jika barang mengandung rakitan utama (PUMP, MOTOR, CYLINDER, TURBO, INJECTOR, ALTERNATOR, STARTER)
-      if (/\b(PUMP|MOTOR|CYLINDER|TURBO|INJECTOR|ALTERNATOR|STARTER)\b/.test(desc)) {
-        // Jika hanya gasket, seal, selang, atau baut dari pompa tersebut -> tetap diabaikan
-        if (/\b(GASKET|SEAL|O-RING|BOLT|WASHER|PACKING|CLAMP|HOSE|FITTING)\b/.test(desc)) {
+      // Proteksi Komponen Utama / Rakitan Penting
+      if (/\b(PUMP|MOTOR|CYLINDER|TURBO|INJECTOR|ALTERNATOR|STARTER|TRANSMISSION|DIFFERENTIAL|TORQUE CONVERTER)\b/.test(desc)) {
+        // Jika hanya part pelengkap (seperti baut, gasket, selang, cat, atau lem dari komponen tersebut)
+        if (/\b(GASKET|SEAL|O-RING|BOLT|WASHER|PACKING|CLAMP|HOSE|FITTING|CAT|PAINT|LEM)\b/.test(desc)) {
           return true;
         }
-        // Jika rakitan utama (misal: "HYDRAULIC PUMP ASSY", "WATER PUMP") -> WAJIB dipertahankan sebagai core!
+        // Jika rakitan fisik utama (misal: "HYDRAULIC PUMP ASSY", "STARTER MOTOR") -> Tetap sebagai Core!
         return false;
       }
       return true;
