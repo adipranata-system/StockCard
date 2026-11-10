@@ -207,7 +207,7 @@ function switchSite(siteKey) {
 
 /**
  * ============================================================================
- * 2. LIVE CENTRAL DATABASE DATA FETCHER
+ * 2. LIVE CENTRAL DATABASE DATA FETCHER & CORE FILTER
  * ============================================================================
  */
 async function fetchSiteData(site, suppressToast = false) {
@@ -278,6 +278,51 @@ function populateMasterEquipmentDatalist() {
   });
 }
 
+/**
+ * Filter Cerdas Deteksi Barang Habis Pakai (Consumables / Non-Core Exclusion)
+ * Mengabaikan baut, cairan, hose, filter, fitting, dan scrap aus dari Outstanding SKHQ Cores
+ */
+function isConsumableOrNonCore(partNumber, description, uom) {
+  const desc = String(description || '').toUpperCase();
+  const uomUp = String(uom || '').toUpperCase().trim();
+
+  // 1. Cek Satuan Curah / Cairan / Panjang (Bulk & Fluid UOM)
+  const fluidBulkUoms = ['LTR', 'LITER', 'MTR', 'METER', 'DRUM', 'PAIL', 'CAN', 'BTL', 'KG', 'ROLL', 'TUBE'];
+  if (fluidBulkUoms.includes(uomUp)) return true;
+
+  // 2. Cairan, Bahan Bakar, Pelumas & Kimia
+  if (/\b(ENGINE OIL|HYDRAULIC OIL|GEAR OIL|TRANS(MISSION)? OIL|DIESEL|SOLAR|GREASE|COOLANT|BRAKE FLUID|DEGREASER|CLEANER|SEALANT|LOCTITE|MAJUN|RAGS)\b/.test(desc)) {
+    return true;
+  }
+
+  // 3. Pola Barang Habis Pakai & Scrap Lokal
+  const consumablePatterns = [
+    /\bBOLT\b/, /\bNUT\b/, /\bWASHER\b/, /\bSCREW\b/, /\bSTUD\b/, /\bCOTTER\b/, /\bPIN LOCK\b/,
+    /\bHOSE\b/, /\bFITTING\b/, /\bADAPTOR\b/, /\bADAPTER\b/, /\bNIPPLE\b/, /\bCLAMP\b/, /\bFLANGE\b/, /\bELBOW\b/, /\bCOUPLING\b/,
+    /\bTOOTH\b/, /\bCUTTING EDGE\b/, /\bEND BIT\b/, /\bSIDE CUTTER\b/,
+    /\bFILTER\b/, /\bELEMENT\b/, /\bCARTRIDGE\b/, /\bSTRAINER\b/,
+    /\bFUSE\b/, /\bRELAY\b/, /\bBULB\b/, /\bBOHLAM\b/, /\bLAMP\b/, /\bWIRING TAPE\b/, /\bCABLE TIE\b/,
+    /\bO-RING\b/, /\bSEAL\b/, /\bGASKET\b/, /\bPACKING\b/, /\bV-BELT\b/, /\bFAN BELT\b/, /\bWIPER BLADE\b/
+  ];
+
+  for (const pattern of consumablePatterns) {
+    if (pattern.test(desc)) {
+      // Pengecekan Aman: Jika barang mengandung rakitan utama (PUMP, MOTOR, CYLINDER, TURBO, INJECTOR, ALTERNATOR, STARTER)
+      if (/\b(PUMP|MOTOR|CYLINDER|TURBO|INJECTOR|ALTERNATOR|STARTER)\b/.test(desc)) {
+        // Contoh: "WATER PUMP GASKET", "OIL PUMP SEAL" -> tetap diabaikan karena hanya gasket/seal
+        if (/\b(GASKET|SEAL|O-RING|BOLT|WASHER|PACKING|CLAMP|HOSE|FITTING)\b/.test(desc)) {
+          return true;
+        }
+        // Contoh: "OIL PUMP ASSY", "WATER PUMP" -> BUKAN consumable, WAJIB dipertahankan sebagai core!
+        return false;
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function calculateSkhqPendingList() {
   const receivedCores = new Set(oldCoreRegisterData.map(c => `${c.sjSkhq}_${c.cleanPn}`));
   skhqPendingList = [];
@@ -286,6 +331,12 @@ function calculateSkhqPendingList() {
     (p.history || []).forEach(h => {
       if (h.inQty > 0 && (h.docNo.includes('SPB') || h.docNo.includes('SKHQ') || h.docNo.includes('SJ'))) {
         const key = `${h.docNo}_${p.cleanPn}`;
+
+        // Terapkan Smart Exclusion Filter (Abaikan Barang Habis Pakai)
+        if (isConsumableOrNonCore(p.cleanPn, p.partDescription, p.uom)) {
+          return;
+        }
+
         if (!receivedCores.has(key)) {
           skhqPendingList.push({
             sjSkhq: h.docNo,
@@ -387,7 +438,6 @@ function renderStockCard() {
       return;
     }
 
-    // Sort newest date first & limit display to max 15 rows
     history.sort((a, b) => new Date(b.date) - new Date(a.date));
     const displayHistory = history.slice(0, 15);
 
@@ -404,7 +454,6 @@ function renderStockCard() {
       tr.className = (idx % 2 === 0 ? 'bg-white/70' : 'bg-amber-50/50') + ' hover:bg-amber-100/60 border-b border-amber-200/80 transition-colors';
       const displayOut = Math.abs(row.outQty || 0);
 
-      // Visual Direction Badges: ↓ In and ↑ Out
       const inBadgeHtml = row.inQty > 0 
         ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100/90 text-emerald-950 font-mono font-black text-xs sm:text-sm border border-emerald-300 shadow-sm"><i class="fa-solid fa-arrow-down text-[11px] text-emerald-600"></i>+${row.inQty}</span>`
         : `<span class="text-slate-400 font-mono font-bold">-</span>`;
@@ -746,6 +795,139 @@ function updateOldCoreCounters() {
 
   const dE = document.getElementById('summaryCoreDue');
   if (dE) dE.textContent = `${due} Item`;
+}
+
+/**
+ * ============================================================================
+ * 5.1 EXPORT OLD CORE TO CSV (PERIODE BULAN & FILTER STATUS)
+ * ============================================================================
+ */
+function openExportOldCoreModal() {
+  const modal = document.getElementById('exportOldCoreModal');
+  const monthInput = document.getElementById('exportCoreMonthInput');
+  const allCheckbox = document.getElementById('exportAllPeriodsCheckbox');
+  const statusSelect = document.getElementById('exportCoreStatusSelect');
+
+  if (!modal) return;
+
+  const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  if (monthInput) {
+    monthInput.value = currentMonthStr;
+    monthInput.disabled = false;
+  }
+  if (allCheckbox) allCheckbox.checked = false;
+  if (statusSelect) statusSelect.value = 'ALL';
+
+  modal.classList.remove('hidden');
+}
+
+function closeExportOldCoreModal() {
+  const modal = document.getElementById('exportOldCoreModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function toggleExportAllPeriods(isChecked) {
+  const monthInput = document.getElementById('exportCoreMonthInput');
+  if (monthInput) {
+    monthInput.disabled = isChecked;
+  }
+}
+
+function executeOldCoreCsvExport() {
+  const allCheckbox = document.getElementById('exportAllPeriodsCheckbox');
+  const monthInput = document.getElementById('exportCoreMonthInput');
+  const statusSelect = document.getElementById('exportCoreStatusSelect');
+
+  const isAllPeriod = allCheckbox ? allCheckbox.checked : false;
+  const selectedPeriod = monthInput ? monthInput.value.trim() : '';
+  const selectedStatus = statusSelect ? statusSelect.value : 'ALL';
+
+  if (!isAllPeriod && !selectedPeriod) {
+    showToast('Please select Month and Year period!', 'warning');
+    return;
+  }
+
+  let filtered = oldCoreRegisterData.filter(item => {
+    if (selectedStatus === 'PENDING' && item.status !== 'PENDING') return false;
+    if (selectedStatus === 'SENT' && item.status !== 'SENT') return false;
+
+    if (!isAllPeriod) {
+      const itemDateStr = String(item.date || '').trim();
+      if (!itemDateStr.startsWith(selectedPeriod)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    showToast(`No Old Core records found for selected filter!`, 'warning');
+    return;
+  }
+
+  const headers = [
+    'Site',
+    'ID Core',
+    'Receipt Date',
+    'Unit ID',
+    'Part Number',
+    'Part Description',
+    'Origin SKHQ SPB',
+    'Quantity',
+    'Pallet / Bin Loc',
+    'Condition / Remarks',
+    'Status',
+    'Site SPB Number',
+    'Dispatch Date'
+  ];
+
+  const escapeCsv = (val) => {
+    if (val === null || val === undefined) return '""';
+    const s = String(val).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const csvRows = [];
+  csvRows.push(headers.map(h => escapeCsv(h)).join(','));
+
+  filtered.forEach(item => {
+    const row = [
+      currentSite,
+      item.id || '',
+      item.date || '',
+      item.unitId || '',
+      item.cleanPn || item.partNumber || '',
+      item.partDescription || item.desc || '',
+      item.sjSkhq || '',
+      item.qty || 1,
+      item.binLoc || '',
+      item.condition || '',
+      item.status || '',
+      item.sjSiteNumber || '',
+      item.dateSent || ''
+    ];
+    csvRows.push(row.map(cell => escapeCsv(cell)).join(','));
+  });
+
+  const csvContent = '\uFEFF' + csvRows.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const periodTag = isAllPeriod ? 'ALL' : selectedPeriod;
+  const filename = `OldCore_Report_${currentSite}_${periodTag}_${selectedStatus}.csv`;
+
+  const downloadLink = document.createElement('a');
+  downloadLink.href = url;
+  downloadLink.setAttribute('download', filename);
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(url);
+
+  closeExportOldCoreModal();
+  showToast(`CSV file "${filename}" (${filtered.length} rows) downloaded successfully!`, 'success');
 }
 
 /**
@@ -1395,7 +1577,6 @@ function removeCapturedPhoto() {
   if (img) img.src = '';
 }
 
-// TAP-TO-ZOOM PREVIEW
 function previewCurrentCapturedPhoto() {
   if (!currentPhotoBase64) return;
   const unit = document.getElementById('inputCoreUnit').value.trim() || 'NEW';
@@ -1753,6 +1934,7 @@ function setupKeyboardShortcuts() {
       closeInputOldCoreModal();
       closeSendToSkhqModal();
       closePrintManifestModal();
+      closeExportOldCoreModal();
       const outModal = document.getElementById('skhqOutstandingModal');
       if (outModal) outModal.classList.add('hidden');
       const sModal = document.getElementById('searchModal');
