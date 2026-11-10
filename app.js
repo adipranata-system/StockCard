@@ -29,6 +29,7 @@ let filteredPartList = [];
 let skhqComboboxIndex = -1;
 let filteredSkhqList = [];
 let selectedSkhqValue = '';
+let currentMaxCoreQuota = null; // Quota tracker batas maksimum supply SKHQ
 
 // DISPATCH & MANIFEST STATE
 let selectedDispatchCoreIds = new Set();
@@ -391,27 +392,38 @@ function isConsumableOrNonCore(partNumber, description, uom) {
 }
 
 function calculateSkhqPendingList() {
-  const receivedCores = new Set(oldCoreRegisterData.map(c => `${c.sjSkhq}_${c.cleanPn}`));
+  // Hitung akumulasi fisik yang sudah pernah diterima untuk setiap SPB & Part
+  const receivedQtyMap = new Map();
+  oldCoreRegisterData.forEach(c => {
+    const k = `${c.sjSkhq}_${c.cleanPn}`.toUpperCase();
+    receivedQtyMap.set(k, (receivedQtyMap.get(k) || 0) + (parseFloat(c.qty) || 1));
+  });
+
   skhqPendingList = [];
 
   masterStockData.forEach(p => {
     (p.history || []).forEach(h => {
       if (h.inQty > 0 && (h.docNo.includes('SPB') || h.docNo.includes('SKHQ') || h.docNo.includes('SJ'))) {
-        const key = `${h.docNo}_${p.cleanPn}`;
+        const key = `${h.docNo}_${p.cleanPn}`.toUpperCase();
 
         // Terapkan Smart Exclusion Filter (Abaikan Barang Habis Pakai)
         if (isConsumableOrNonCore(p.cleanPn, p.partDescription, p.uom)) {
           return;
         }
 
-        if (!receivedCores.has(key)) {
+        const alreadyReceived = receivedQtyMap.get(key) || 0;
+        const remainingQuota = Math.max(0, h.inQty - alreadyReceived);
+
+        // Hanya masukkan jika masih ada sisa hutang fisik yang belum diterima
+        if (remainingQuota > 0) {
           skhqPendingList.push({
             sjSkhq: h.docNo,
             date: h.date,
             partNumber: p.cleanPn,
             partDescription: p.partDescription,
             unitAssigned: h.unit !== '-' ? h.unit : '',
-            qtyIncoming: h.inQty
+            qtyIncoming: h.inQty,
+            remainingQuota: remainingQuota
           });
         }
       }
@@ -1019,13 +1031,22 @@ function clearSkhqComboboxInput() {
   const btn = document.getElementById('clearSkhqComboboxBtn');
   if (btn) btn.classList.add('hidden');
   selectedSkhqValue = '';
+  currentMaxCoreQuota = null;
 
   const pInp = document.getElementById('inputCorePart');
   const dInp = document.getElementById('inputCoreDesc');
   const uInp = document.getElementById('inputCoreUnit');
+  const qInp = document.getElementById('inputCoreQty');
+  const qHint = document.getElementById('coreQtyMaxHint');
+
   if (pInp) pInp.value = '';
   if (dInp) dInp.value = '';
   if (uInp) uInp.value = '';
+  if (qInp) {
+    qInp.value = 1;
+    qInp.removeAttribute('max');
+  }
+  if (qHint) qHint.textContent = '';
 
   filterSkhqCombobox('');
   openSkhqComboboxDropdown();
@@ -1174,10 +1195,28 @@ function selectSkhqFromCombobox(item) {
   const dInp = document.getElementById('inputCoreDesc');
   const uInp = document.getElementById('inputCoreUnit');
   const dtInp = document.getElementById('inputCoreDate');
+  const qInp = document.getElementById('inputCoreQty');
+  const qHint = document.getElementById('coreQtyMaxHint');
 
   if (pInp) pInp.value = item.partNumber;
   if (dInp) dInp.value = item.partDescription;
   if (uInp && item.unitAssigned) uInp.value = item.unitAssigned;
+
+  // Tetapkan kuota batas maksimum sesuai sisa pasokan SKHQ
+  currentMaxCoreQuota = item.remainingQuota !== undefined ? item.remainingQuota : (item.qtyIncoming || 1);
+
+  if (qInp) {
+    qInp.max = currentMaxCoreQuota;
+    // Jika qty saat ini melebihi kuota sisa, sesuaikan otomatis
+    if (parseInt(qInp.value) > currentMaxCoreQuota || parseInt(qInp.value) < 1) {
+      qInp.value = 1;
+    }
+  }
+
+  if (qHint) {
+    qHint.textContent = `(Max Allowed: ${currentMaxCoreQuota} PC from SPB)`;
+    qHint.className = "text-[11px] font-bold text-emerald-600";
+  }
 
   updateClearSkhqButtonVisibility();
   closeSkhqComboboxDropdown();
@@ -1187,8 +1226,19 @@ function selectSkhqFromCombobox(item) {
 
 function selectManualSkhqEntry(val) {
   selectedSkhqValue = (val || 'SPB-MANUAL').toUpperCase();
+  currentMaxCoreQuota = null;
+
   const inp = document.getElementById('skhqComboboxInput');
   if (inp) inp.value = `[MANUAL] ${selectedSkhqValue}`;
+
+  const qInp = document.getElementById('inputCoreQty');
+  const qHint = document.getElementById('coreQtyMaxHint');
+  if (qInp) qInp.removeAttribute('max');
+  if (qHint) {
+    qHint.textContent = '(Custom / Manual Mode)';
+    qHint.className = "text-[11px] font-bold text-slate-500";
+  }
+
   updateClearSkhqButtonVisibility();
   closeSkhqComboboxDropdown();
 
@@ -1218,6 +1268,17 @@ function setupEnterToNextFieldNavigation() {
       }
     });
   }
+
+  // Pengaman instan saat storeman mengetik angka Qty di layar
+  if (qInp) {
+    qInp.addEventListener('input', () => {
+      const val = parseInt(qInp.value);
+      if (currentMaxCoreQuota !== null && val > currentMaxCoreQuota) {
+        qInp.value = currentMaxCoreQuota;
+        showToast(`Quantity cannot exceed SKHQ supply limit (Max: ${currentMaxCoreQuota} PC)!`, 'warning');
+      }
+    });
+  }
 }
 
 async function saveNewOldCore(e) {
@@ -1230,6 +1291,17 @@ async function saveNewOldCore(e) {
   const qty = parseInt(document.getElementById('inputCoreQty').value) || 1;
   const bin = document.getElementById('inputCoreBin').value.trim() || 'PALET-CORE-01';
   const remark = document.getElementById('inputCoreRemark').value.trim() || 'Physical core received from mechanic';
+
+  // Validasi Keras: Tolak simpan jika kuantitas melebihi batas supply SKHQ
+  if (currentMaxCoreQuota !== null && qty > currentMaxCoreQuota) {
+    showToast(`Rejected: Quantity (${qty} PC) exceeds SKHQ supply limit (Max: ${currentMaxCoreQuota} PC)!`, 'warning');
+    const qInp = document.getElementById('inputCoreQty');
+    if (qInp) {
+      qInp.value = currentMaxCoreQuota;
+      qInp.focus();
+    }
+    return;
+  }
 
   const coreId = `${currentSite}-CORE-` + Date.now().toString().slice(-4);
   const cleanSj = sj.startsWith('[MANUAL]') ? sj.replace('[MANUAL] ', '') : sj;
@@ -1279,6 +1351,10 @@ async function saveNewOldCore(e) {
   document.getElementById('formOldCore').reset();
   removeCapturedPhoto();
   document.getElementById('inputCoreDate').value = new Date().toISOString().split('T')[0];
+
+  currentMaxCoreQuota = null;
+  const qHint = document.getElementById('coreQtyMaxHint');
+  if (qHint) qHint.textContent = '';
 
   renderOldCoreTable();
   showToast(`Old Core ${pn} successfully registered at Site ${currentSite}!`, 'success');
