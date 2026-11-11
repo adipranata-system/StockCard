@@ -175,7 +175,7 @@
         <a href="https://www.linkedin.com/in/adi-pranata-86449658/" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 font-extrabold underline inline-flex items-center gap-1.5 mt-1 text-sm">
           <i class="fa-brands fa-linkedin text-sm"></i> Adi Pranata
         </a>
-        <div class="text-[11px] text-slate-500 font-mono mt-0.5">Plant Department</div>
+        <div class="text-[11px] text-slate-500 font-mono mt-0.5">Plant & Logistics Supervisor</div>
       </div>
     </div>
   </div>
@@ -225,7 +225,7 @@
               STOCK CARD DIGITAL
             </h1>
             <p class="text-[10px] sm:text-xs text-amber-400 font-mono font-bold tracking-wider truncate">
-              KTC MINING & ENERGY
+              PT.KTC COAL MINING & ENERGY
             </p>
           </div>
         </div>
@@ -244,8 +244,8 @@
             <span class="hidden md:inline">Search (F2)</span>
           </button>
 
-          <!-- Upload Odoo -->
-          <button onclick="openUploadModal()" class="w-10 h-10 sm:w-auto sm:h-auto sm:px-3.5 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 shadow-tactile-emerald transition-all" title="Import Odoo Data">
+          <!-- Upload Odoo (Diberi ID agar dapat disembunyikan untuk Role VIEWER) -->
+          <button id="headerImportBtn" onclick="openUploadModal()" class="w-10 h-10 sm:w-auto sm:h-auto sm:px-3.5 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 shadow-tactile-emerald transition-all" title="Import Odoo Data">
             <i class="fa-solid fa-file-excel text-sm"></i>
             <span class="hidden md:inline">Import</span>
           </button>
@@ -269,7 +269,7 @@
               Adi Pranata
             </div>
             <div class="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate flex items-center gap-1">
-              <span>Plant & Logistics Spv</span>
+              <span id="headerRoleBadge">Plant & Logistics Spv</span>
               <span class="text-slate-600">•</span>
               <span id="headerSiteIndicator" class="font-bold font-mono text-white bg-slate-800 px-1.5 py-0.2 rounded text-[9px] sm:text-[10px]">SITE TNPN</span>
             </div>
@@ -289,8 +289,8 @@
         </div>
       </div>
 
-      <!-- Baris 3: TAB SWITCHER -->
-      <div class="mt-2.5 pt-2 border-t border-slate-800 flex gap-2">
+      <!-- Baris 3: TAB SWITCHER (Diberi ID agar dapat disembunyikan untuk Role VIEWER) -->
+      <div id="mainTabSwitcherContainer" class="mt-2.5 pt-2 border-t border-slate-800 flex gap-2">
         <button id="tabBtnNewPart" onclick="switchAppTab('new-part')" class="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-black text-xs sm:text-sm transition-all border-2 border-amber-300 bg-[#FFFDF2] text-slate-900 shadow">
           <i class="fa-solid fa-file-lines text-amber-600 text-base"></i>
           <span class="truncate">ACTIVE STOCK CARD</span>
@@ -502,7 +502,7 @@
               <i class="fa-brands fa-linkedin text-xs"></i> Adi Pranata
             </a>
             <span class="text-slate-500 mx-1">•</span>
-            <span class="text-slate-400 font-mono">Plant Department</span>
+            <span class="text-slate-400 font-mono">Plant & Logistics Supervisor</span>
           </div>
         </div>
 
@@ -605,7 +605,7 @@
                 </span>
                 <span class="text-xs font-bold text-orange-950">Site &rarr; SKHQ Core Exchange Matching</span>
               </div>
-              <h3 class="text-lg sm:text-2xl font-mono font-black text-slate-900 mt-0.5">
+              <h3 class="text-lg sm:2xl font-mono font-black text-slate-900 mt-0.5">
                 REGISTER OLD CORE (LINK SKHQ SPB & SITE SPB)
               </h3>
             </div>
@@ -676,7 +676,7 @@
               <i class="fa-brands fa-linkedin text-xs"></i> Adi Pranata
             </a>
             <span class="text-slate-500 mx-1">•</span>
-            <span class="text-slate-400 font-mono">Plant Department</span>
+            <span class="text-slate-400 font-mono">Plant & Logistics Supervisor</span>
           </div>
         </div>
 
