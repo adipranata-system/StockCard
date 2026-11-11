@@ -31,6 +31,10 @@ let filteredSkhqList = [];
 let selectedSkhqValue = '';
 let currentMaxCoreQuota = null; // Quota tracker batas maksimum supply SKHQ
 
+// COMBOBOX UNIT ID (MASTEREQUIPMENT) STATE
+let unitComboboxIndex = -1;
+let filteredUnitList = [];
+
 // DISPATCH & MANIFEST STATE
 let selectedDispatchCoreIds = new Set();
 let currentViewingManifestSj = null;
@@ -1081,7 +1085,10 @@ function clearSkhqComboboxInput() {
 
   if (pInp) pInp.value = '';
   if (dInp) dInp.value = '';
-  if (uInp) uInp.value = '';
+  if (uInp) {
+    uInp.value = '';
+    updateClearUnitButtonVisibility();
+  }
   if (qInp) {
     qInp.value = 1;
     qInp.removeAttribute('max');
@@ -1240,7 +1247,10 @@ function selectSkhqFromCombobox(item) {
 
   if (pInp) pInp.value = item.partNumber;
   if (dInp) dInp.value = item.partDescription;
-  if (uInp && item.unitAssigned) uInp.value = item.unitAssigned;
+  if (uInp && item.unitAssigned) {
+    uInp.value = item.unitAssigned;
+    updateClearUnitButtonVisibility();
+  }
 
   currentMaxCoreQuota = item.remainingQuota !== undefined ? item.remainingQuota : (item.qtyIncoming || 1);
 
@@ -1293,16 +1303,10 @@ function setupEnterToNextFieldNavigation() {
     dtInp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (uInp) uInp.focus();
-      }
-    });
-  }
-
-  if (uInp) {
-    uInp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (qInp) qInp.focus();
+        if (uInp) {
+          uInp.focus();
+          openUnitComboboxDropdown();
+        }
       }
     });
   }
@@ -1315,6 +1319,219 @@ function setupEnterToNextFieldNavigation() {
         showToast(`Quantity cannot exceed SKHQ supply limit (Max: ${currentMaxCoreQuota} PC)!`, 'warning');
       }
     });
+  }
+}
+
+/**
+ * ============================================================================
+ * 6.1 REMOVED FROM UNIT ID COMBOBOX (MASTER EQUIPMENT & CUSTOM FALLBACK)
+ * ============================================================================
+ */
+function initUnitCombobox() {
+  const inp = document.getElementById('inputCoreUnit');
+  if (inp) inp.value = '';
+  updateClearUnitButtonVisibility();
+  filterUnitCombobox('');
+}
+
+function clearUnitComboboxInput() {
+  const inp = document.getElementById('inputCoreUnit');
+  if (inp) {
+    inp.value = '';
+    inp.focus();
+  }
+  updateClearUnitButtonVisibility();
+  filterUnitCombobox('');
+  openUnitComboboxDropdown();
+}
+
+function updateClearUnitButtonVisibility() {
+  const inp = document.getElementById('inputCoreUnit');
+  const btn = document.getElementById('clearUnitComboboxBtn');
+  if (!inp || !btn) return;
+  if (inp.value && inp.value.trim().length > 0) {
+    btn.classList.remove('hidden');
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+function toggleUnitComboboxDropdown() {
+  const drop = document.getElementById('unitComboboxDropdown');
+  if (!drop) return;
+  if (drop.classList.contains('hidden')) openUnitComboboxDropdown();
+  else closeUnitComboboxDropdown();
+}
+
+function openUnitComboboxDropdown() {
+  const drop = document.getElementById('unitComboboxDropdown');
+  const arrow = document.getElementById('unitComboboxArrow');
+  if (!drop) return;
+  filterUnitCombobox(document.getElementById('inputCoreUnit').value);
+  drop.classList.remove('hidden');
+  if (arrow) arrow.style.transform = 'rotate(180deg)';
+}
+
+function closeUnitComboboxDropdown() {
+  const drop = document.getElementById('unitComboboxDropdown');
+  const arrow = document.getElementById('unitComboboxArrow');
+  if (!drop) return;
+  drop.classList.add('hidden');
+  if (arrow) arrow.style.transform = 'rotate(0deg)';
+}
+
+function handleUnitComboboxInput(val) {
+  updateClearUnitButtonVisibility();
+  openUnitComboboxDropdown();
+  filterUnitCombobox(val);
+}
+
+function filterUnitCombobox(query) {
+  const q = (query || '').toLowerCase().trim();
+  const drop = document.getElementById('unitComboboxDropdown');
+  if (!drop) return;
+
+  drop.innerHTML = '';
+  unitComboboxIndex = -1;
+
+  filteredUnitList = masterEquipmentList.filter(eq => {
+    if (!q) return true;
+    return eq.unitId.toLowerCase().includes(q) ||
+           (eq.model || '').toLowerCase().includes(q) ||
+           (eq.jenis || '').toLowerCase().includes(q);
+  });
+
+  // JIKA STOREMAN MENGETIK TEKS TERTENTU, TAMPILKAN OPSI CUSTOM DI PALING ATAS
+  if (q.length > 0) {
+    const customRow = document.createElement('div');
+    customRow.id = `unit-combo-opt-custom`;
+    customRow.className = "px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 cursor-pointer flex items-center justify-between border-b-2 border-orange-200 transition-colors";
+    customRow.onclick = () => selectUnitFromCombobox(q.toUpperCase());
+    customRow.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs font-black shadow-sm">+</span>
+        <div>
+          <span class="text-xs text-orange-950 font-bold block leading-tight">Use Custom / New Unit:</span>
+          <span class="font-mono font-black text-sm text-orange-700">"${q.toUpperCase()}"</span>
+        </div>
+      </div>
+      <span class="text-[10px] uppercase font-bold text-orange-800 bg-orange-200/80 px-2 py-0.5 rounded">CUSTOM</span>
+    `;
+    drop.appendChild(customRow);
+  }
+
+  if (filteredUnitList.length === 0 && q.length === 0) {
+    drop.innerHTML = `<div class="p-4 text-xs text-slate-500 italic text-center">No units in master database</div>`;
+    return;
+  }
+
+  filteredUnitList.forEach((eq, idx) => {
+    const div = document.createElement('div');
+    div.id = `unit-combo-opt-${idx}`;
+    div.className = "px-3.5 py-2.5 hover:bg-orange-100 cursor-pointer flex items-center justify-between text-left transition-colors border-b border-orange-100 last:border-none";
+    div.onclick = () => selectUnitFromCombobox(eq.unitId);
+    div.innerHTML = `
+      <div>
+        <div class="font-mono font-black text-slate-900 text-sm sm:text-base">${eq.unitId}</div>
+        <div class="text-xs text-slate-600 font-semibold leading-snug">${eq.model || '-'}</div>
+      </div>
+      <div class="text-right pl-2 shrink-0">
+        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase">${eq.jenis || 'UNIT'}</span>
+      </div>
+    `;
+    drop.appendChild(div);
+  });
+}
+
+function handleUnitComboboxKeydown(e) {
+  const drop = document.getElementById('unitComboboxDropdown');
+  const isVisible = drop && !drop.classList.contains('hidden');
+  const q = (document.getElementById('inputCoreUnit').value || '').trim();
+  const hasCustom = q.length > 0;
+  const totalOptions = filteredUnitList.length + (hasCustom ? 1 : 0);
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (!isVisible) {
+      openUnitComboboxDropdown();
+      return;
+    }
+    if (totalOptions > 0) {
+      unitComboboxIndex = (unitComboboxIndex + 1) % totalOptions;
+      highlightUnitComboboxOption(unitComboboxIndex, hasCustom);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!isVisible) return;
+    if (totalOptions > 0) {
+      unitComboboxIndex = (unitComboboxIndex - 1 + totalOptions) % totalOptions;
+      highlightUnitComboboxOption(unitComboboxIndex, hasCustom);
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (isVisible && unitComboboxIndex >= 0) {
+      if (hasCustom && unitComboboxIndex === 0) {
+        selectUnitFromCombobox(q.toUpperCase());
+      } else {
+        const itemIdx = hasCustom ? unitComboboxIndex - 1 : unitComboboxIndex;
+        if (itemIdx >= 0 && itemIdx < filteredUnitList.length) {
+          selectUnitFromCombobox(filteredUnitList[itemIdx].unitId);
+        }
+      }
+    } else if (isVisible && totalOptions > 0) {
+      if (hasCustom && filteredUnitList.length === 0) {
+        selectUnitFromCombobox(q.toUpperCase());
+      } else if (filteredUnitList.length > 0) {
+        selectUnitFromCombobox(filteredUnitList[0].unitId);
+      } else {
+        selectUnitFromCombobox(q.toUpperCase());
+      }
+    } else {
+      selectUnitFromCombobox(q.toUpperCase() || '-');
+    }
+  } else if (e.key === 'Escape') {
+    closeUnitComboboxDropdown();
+  }
+}
+
+function highlightUnitComboboxOption(activeIdx, hasCustom) {
+  const customEl = document.getElementById('unit-combo-opt-custom');
+  if (customEl) {
+    if (activeIdx === 0) {
+      customEl.classList.add('combobox-item-active-orange');
+      customEl.scrollIntoView({ block: 'nearest' });
+    } else {
+      customEl.classList.remove('combobox-item-active-orange');
+    }
+  }
+
+  filteredUnitList.forEach((_, idx) => {
+    const el = document.getElementById(`unit-combo-opt-${idx}`);
+    if (!el) return;
+    const effectiveIdx = hasCustom ? idx + 1 : idx;
+    if (effectiveIdx === activeIdx) {
+      el.classList.add('combobox-item-active-orange');
+      el.scrollIntoView({ block: 'nearest' });
+    } else {
+      el.classList.remove('combobox-item-active-orange');
+    }
+  });
+}
+
+function selectUnitFromCombobox(unitIdVal) {
+  const inp = document.getElementById('inputCoreUnit');
+  if (inp) inp.value = unitIdVal;
+
+  updateClearUnitButtonVisibility();
+  closeUnitComboboxDropdown();
+
+  // Enter-to-Next: Kursor otomatis melompat ke Qty atau Storage Bin
+  const qInp = document.getElementById('inputCoreQty');
+  if (qInp) {
+    setTimeout(() => {
+      qInp.focus();
+      qInp.select();
+    }, 60);
   }
 }
 
@@ -2011,6 +2228,13 @@ function openInputOldCoreModal() {
   const m = document.getElementById('inputOldCoreModal');
   if (m) m.classList.remove('hidden');
   initSkhqCombobox();
+  initUnitCombobox();
+}
+function closeInputOldCoreModal() {
+  const m = document.getElementById('inputOldCoreModal');
+  if (m) m.classList.add('hidden');
+  closeSkhqComboboxDropdown();
+  closeUnitComboboxDropdown();
 }
 function closeInputOldCoreModal() {
   const m = document.getElementById('inputOldCoreModal');
@@ -2093,6 +2317,10 @@ function setupOutsideClickListeners() {
     const sDrop = document.getElementById('skhqComboboxDropdown');
     const sInp = document.getElementById('skhqComboboxInput');
     if (sDrop && !sDrop.contains(e.target) && e.target !== sInp) closeSkhqComboboxDropdown();
+
+    const uDrop = document.getElementById('unitComboboxDropdown');
+    const uInp = document.getElementById('inputCoreUnit');
+    if (uDrop && !uDrop.contains(e.target) && e.target !== uInp) closeUnitComboboxDropdown();
   });
 }
 
