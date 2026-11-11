@@ -49,7 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 /**
  * ============================================================================
- * 1. USER AUTHENTICATION & DEVICE SESSION (AUTO-REMEMBER)
+ * 1. USER AUTHENTICATION & DEVICE SESSION (AUTO-REMEMBER & ROLE PERMISSIONS)
  * ============================================================================
  */
 function checkStoredUserAuth() {
@@ -123,10 +123,43 @@ function applyUserSession(user) {
     uNameElem.textContent = user.name || 'Adi Pranata';
   }
 
-  const roleUpper = String(user.role || '').toUpperCase();
-  const siteUpper = String(user.site || '').toUpperCase();
+  const roleUpper = String(user.role || '').toUpperCase().trim();
+  const siteUpper = String(user.site || '').toUpperCase().trim();
+
+  // Deteksi wewenang role VIEWER
+  const isViewer = roleUpper === 'VIEWER' || roleUpper.includes('VIEWER');
   const isSuper = roleUpper.includes('SUPER') || roleUpper.includes('ADMIN') || siteUpper === 'ALL' || roleUpper.includes('PLANNER');
 
+  // Pengaturan Tampilan Role Badge di Header
+  const roleBadge = document.getElementById('headerRoleBadge');
+  if (roleBadge) {
+    if (isViewer) {
+      roleBadge.textContent = 'Viewer (Stock Card Only)';
+    } else if (roleUpper.includes('SUPER')) {
+      roleBadge.textContent = 'Plant & Logistics Spv';
+    } else {
+      roleBadge.textContent = user.role || 'Warehouse Storeman';
+    }
+  }
+
+  // Penerapan Isolasi Khusus Role VIEWER
+  const importBtn = document.getElementById('headerImportBtn');
+  const tabSwitcher = document.getElementById('mainTabSwitcherContainer');
+
+  if (isViewer) {
+    // Sembunyikan Tombol Import Odoo dan Bilah Tab Switcher
+    if (importBtn) importBtn.classList.add('hidden');
+    if (tabSwitcher) tabSwitcher.classList.add('hidden');
+
+    // Kunci tampilan ke Active Stock Card murni
+    switchAppTab('new-part');
+  } else {
+    // Tampilkan untuk role operasional (Storeman, Supervisor, Admin)
+    if (importBtn) importBtn.classList.remove('hidden');
+    if (tabSwitcher) tabSwitcher.classList.remove('hidden');
+  }
+
+  // Pengaturan Akses Switcher Site (TNPN / TTLP)
   const switcher = document.getElementById('supervisorSiteSwitcher');
   if (isSuper) {
     if (switcher) switcher.classList.remove('hidden');
@@ -154,6 +187,12 @@ function executeLogout() {
   localStorage.removeItem('ktc_authenticated_user');
   currentUser = null;
   closeLogoutModal();
+
+  // Reset Elemen Tampilan ke Kondisi Standar
+  const importBtn = document.getElementById('headerImportBtn');
+  const tabSwitcher = document.getElementById('mainTabSwitcherContainer');
+  if (importBtn) importBtn.classList.remove('hidden');
+  if (tabSwitcher) tabSwitcher.classList.remove('hidden');
 
   const uInp = document.getElementById('loginUsername');
   const pInp = document.getElementById('loginPassword');
@@ -377,11 +416,9 @@ function isConsumableOrNonCore(partNumber, description, uom) {
     if (pattern.test(desc)) {
       // Proteksi Komponen Utama / Rakitan Penting
       if (/\b(PUMP|MOTOR|CYLINDER|TURBO|INJECTOR|ALTERNATOR|STARTER|TRANSMISSION|DIFFERENTIAL|TORQUE CONVERTER)\b/.test(desc)) {
-        // Jika hanya part pelengkap (seperti baut, gasket, selang, cat, atau lem dari komponen tersebut)
         if (/\b(GASKET|SEAL|O-RING|BOLT|WASHER|PACKING|CLAMP|HOSE|FITTING|CAT|PAINT|LEM)\b/.test(desc)) {
           return true;
         }
-        // Jika rakitan fisik utama (misal: "HYDRAULIC PUMP ASSY", "STARTER MOTOR") -> Tetap sebagai Core!
         return false;
       }
       return true;
@@ -392,7 +429,6 @@ function isConsumableOrNonCore(partNumber, description, uom) {
 }
 
 function calculateSkhqPendingList() {
-  // Hitung akumulasi fisik yang sudah pernah diterima untuk setiap SPB & Part
   const receivedQtyMap = new Map();
   oldCoreRegisterData.forEach(c => {
     const k = `${c.sjSkhq}_${c.cleanPn}`.toUpperCase();
@@ -406,7 +442,6 @@ function calculateSkhqPendingList() {
       if (h.inQty > 0 && (h.docNo.includes('SPB') || h.docNo.includes('SKHQ') || h.docNo.includes('SJ'))) {
         const key = `${h.docNo}_${p.cleanPn}`.toUpperCase();
 
-        // Terapkan Smart Exclusion Filter (Abaikan Barang Habis Pakai)
         if (isConsumableOrNonCore(p.cleanPn, p.partDescription, p.uom)) {
           return;
         }
@@ -414,7 +449,6 @@ function calculateSkhqPendingList() {
         const alreadyReceived = receivedQtyMap.get(key) || 0;
         const remainingQuota = Math.max(0, h.inQty - alreadyReceived);
 
-        // Hanya masukkan jika masih ada sisa hutang fisik yang belum diterima
         if (remainingQuota > 0) {
           skhqPendingList.push({
             sjSkhq: h.docNo,
@@ -727,6 +761,14 @@ function selectPartFromCombobox(origIdx) {
  * ============================================================================
  */
 function switchAppTab(tab) {
+  // Pengaman: Cegah role VIEWER beralih ke Old Core
+  const roleUpper = String(currentUser?.role || '').toUpperCase().trim();
+  const isViewer = roleUpper === 'VIEWER' || roleUpper.includes('VIEWER');
+  if (isViewer && tab === 'old-core') {
+    showToast('Old Core access is restricted for Viewer role.', 'warning');
+    return;
+  }
+
   activeTab = tab;
   const vNew = document.getElementById('viewNewPart');
   const vCore = document.getElementById('viewOldCore');
@@ -962,7 +1004,6 @@ function executeOldCoreCsvExport() {
     'Dispatch Date'
   ];
 
-  // Gunakan pemisah Titik Koma (;) standar Excel Indonesia & kutip ganda yang aman
   const delimiter = ';';
   const escapeCsv = (val) => {
     if (val === null || val === undefined) return '""';
@@ -971,7 +1012,6 @@ function executeOldCoreCsvExport() {
   };
 
   const csvRows = [];
-  // Instruksi resmi Microsoft Excel untuk mengenali delimiter titik koma secara otomatis
   csvRows.push('sep=;');
   csvRows.push(headers.map(h => escapeCsv(h)).join(delimiter));
 
@@ -1202,12 +1242,10 @@ function selectSkhqFromCombobox(item) {
   if (dInp) dInp.value = item.partDescription;
   if (uInp && item.unitAssigned) uInp.value = item.unitAssigned;
 
-  // Tetapkan kuota batas maksimum sesuai sisa pasokan SKHQ
   currentMaxCoreQuota = item.remainingQuota !== undefined ? item.remainingQuota : (item.qtyIncoming || 1);
 
   if (qInp) {
     qInp.max = currentMaxCoreQuota;
-    // Jika qty saat ini melebihi kuota sisa, sesuaikan otomatis
     if (parseInt(qInp.value) > currentMaxCoreQuota || parseInt(qInp.value) < 1) {
       qInp.value = 1;
     }
@@ -1269,7 +1307,6 @@ function setupEnterToNextFieldNavigation() {
     });
   }
 
-  // Pengaman instan saat storeman mengetik angka Qty di layar
   if (qInp) {
     qInp.addEventListener('input', () => {
       const val = parseInt(qInp.value);
@@ -1292,7 +1329,6 @@ async function saveNewOldCore(e) {
   const bin = document.getElementById('inputCoreBin').value.trim() || 'PALET-CORE-01';
   const remark = document.getElementById('inputCoreRemark').value.trim() || 'Physical core received from mechanic';
 
-  // Validasi Keras: Tolak simpan jika kuantitas melebihi batas supply SKHQ
   if (currentMaxCoreQuota !== null && qty > currentMaxCoreQuota) {
     showToast(`Rejected: Quantity (${qty} PC) exceeds SKHQ supply limit (Max: ${currentMaxCoreQuota} PC)!`, 'warning');
     const qInp = document.getElementById('inputCoreQty');
@@ -1795,15 +1831,25 @@ let stagedUploadFile = null;
 let stagedRawRows = null;
 
 function openUploadModal() {
+  // Pengaman: Cegah role VIEWER membuka modal import
+  const roleUpper = String(currentUser?.role || '').toUpperCase().trim();
+  const isViewer = roleUpper === 'VIEWER' || roleUpper.includes('VIEWER');
+  if (isViewer) {
+    showToast('Import action is restricted for Viewer role.', 'warning');
+    return;
+  }
+
   resetUploadStaging();
   const m = document.getElementById('uploadModal');
   if (m) m.classList.remove('hidden');
 }
+
 function closeUploadModal() {
   const m = document.getElementById('uploadModal');
   if (m) m.classList.add('hidden');
   resetUploadStaging();
 }
+
 function resetUploadStaging() {
   stagedUploadFile = null;
   stagedRawRows = null;
