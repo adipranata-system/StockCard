@@ -829,17 +829,54 @@
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Receipt Date *</label>
             <input type="date" id="inputCoreDate" required class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2.5 text-sm sm:text-base font-bold focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav">
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Removed from Unit ID *</label>
-            <input 
-              type="text" 
-              id="inputCoreUnit" 
-              list="masterEquipmentDatalist"
-              placeholder="e.g. 1109, 1625" 
-              required 
-              class="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2.5 text-sm sm:text-base font-mono font-black uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 enter-nav"
+          <!-- Custom Smart Combobox: Removed from Unit ID (MasterEquipment) -->
+          <div class="relative">
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
+              <span>Removed from Unit ID *</span>
+              <span class="text-[10px] text-slate-400 font-mono hidden sm:inline">[Keyboard & Touch Friendly]</span>
+            </label>
+
+            <div class="relative flex items-center">
+              <input 
+                type="text" 
+                id="inputCoreUnit" 
+                autocomplete="off"
+                placeholder="Search Unit (e.g. 1109, EXCA)..." 
+                required 
+                class="w-full bg-white border-2 border-slate-300 rounded-xl pl-3 pr-16 py-2.5 text-sm sm:text-base font-mono font-black uppercase text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-400/30 transition-all enter-nav"
+                oninput="handleUnitComboboxInput(this.value)"
+                onfocus="openUnitComboboxDropdown()"
+                onkeydown="handleUnitComboboxKeydown(event)"
+              >
+              
+              <!-- Tombol Bersihkan Input Unit (X) -->
+              <button 
+                type="button" 
+                id="clearUnitComboboxBtn" 
+                onclick="clearUnitComboboxInput()" 
+                title="Clear Unit Query" 
+                class="absolute right-8 text-slate-400 hover:text-rose-500 p-1.5 text-base transition-colors hidden"
+              >
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+
+              <!-- Tombol Panah Buka Dropdown (Chevron) -->
+              <button 
+                type="button" 
+                onclick="toggleUnitComboboxDropdown()" 
+                class="absolute right-2 text-slate-500 hover:text-orange-600 p-1.5 text-sm"
+                title="Toggle Unit List"
+              >
+                <i id="unitComboboxArrow" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+              </button>
+            </div>
+
+            <!-- Jendela Dropdown Saran Unit (MasterEquipment) -->
+            <div 
+              id="unitComboboxDropdown" 
+              class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border-2 border-orange-400 max-h-56 overflow-y-auto ledger-scroll z-40 hidden divide-y divide-orange-100"
             >
-            <datalist id="masterEquipmentDatalist"></datalist>
+            </div>
           </div>
         </div>
 
