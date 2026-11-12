@@ -459,7 +459,7 @@ function calculateSkhqPendingList() {
             date: h.date,
             partNumber: p.cleanPn,
             partDescription: p.partDescription,
-            unitAssigned: h.unit !== '-' ? h.unit : '',
+            unitAssigned: (h.unit && !h.unit.toUpperCase().startsWith('WAREHOUSE') && h.unit !== '-') ? h.unit : '',
             qtyIncoming: h.inQty,
             remainingQuota: remainingQuota
           });
@@ -579,15 +579,27 @@ function renderStockCard() {
         ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-100/90 text-rose-950 font-mono font-black text-xs sm:text-sm border border-rose-300 shadow-sm"><i class="fa-solid fa-arrow-up text-[11px] text-rose-600"></i>-${displayOut}</span>`
         : `<span class="text-slate-400 font-mono font-bold">-</span>`;
 
+      // Bedakan visual Allocation: Gudang (IN) vs Unit Alat Berat (OUT)
+      const isWarehouseLoc = String(row.unit || '').toUpperCase().startsWith('WAREHOUSE');
+      const allocBadgeHtml = isWarehouseLoc
+        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200 font-bold text-xs"><i class="fa-solid fa-warehouse text-[10px] text-blue-600"></i>${row.unit}</span>`
+        : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-900 border border-slate-300 font-mono font-bold text-xs">${row.unit || '-'}</span>`;
+
+      // Mechanic: Asal SKHQ/Vendor untuk IN, Nama Mekanik untuk OUT
+      const isIncomingRow = (row.inQty || 0) > 0;
+      const mechanicBadgeHtml = isIncomingRow
+        ? `<span class="text-xs font-semibold text-slate-700 truncate block max-w-[160px] mx-auto" title="${row.mechanic || '-'}"><i class="fa-solid fa-truck text-[10px] text-amber-600 mr-1"></i>${row.mechanic || '-'}</span>`
+        : `<span class="text-xs font-bold text-slate-800">${row.mechanic || '-'}</span>`;
+
       tr.innerHTML = `
         <td class="py-3 px-3 border-r border-amber-200 text-center font-mono font-bold text-slate-500">${idx + 1}</td>
         <td class="py-3 px-3 border-r border-amber-200 font-mono text-xs sm:text-sm font-semibold whitespace-nowrap">${formatDateIndo(row.date)}</td>
         <td class="py-3 px-3 border-r border-amber-200 font-mono text-xs sm:text-sm font-bold text-slate-900">${row.docNo}</td>
-        <td class="py-3 px-3 border-r border-amber-200 text-xs sm:text-sm font-semibold text-slate-800">${row.unit}</td>
+        <td class="py-3 px-3 border-r border-amber-200 text-xs sm:text-sm font-semibold">${allocBadgeHtml}</td>
         <td class="py-3 px-3 border-r border-amber-200 text-center">${inBadgeHtml}</td>
         <td class="py-3 px-3 border-r border-amber-200 text-center">${outBadgeHtml}</td>
         <td class="py-3 px-3 border-r border-amber-200 text-center font-mono font-black text-slate-950 bg-amber-100/50 text-sm sm:text-base">${row.balance}</td>
-        <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">${row.mechanic || '-'}</td>
+        <td class="py-3 px-3 text-center">${mechanicBadgeHtml}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1247,8 +1259,12 @@ function selectSkhqFromCombobox(item) {
 
   if (pInp) pInp.value = item.partNumber;
   if (dInp) dInp.value = item.partDescription;
-  if (uInp && item.unitAssigned) {
-    uInp.value = item.unitAssigned;
+  if (uInp) {
+    if (item.unitAssigned && !item.unitAssigned.toUpperCase().startsWith('WAREHOUSE')) {
+      uInp.value = item.unitAssigned;
+    } else {
+      uInp.value = '';
+    }
     updateClearUnitButtonVisibility();
   }
 
@@ -2230,16 +2246,12 @@ function openInputOldCoreModal() {
   initSkhqCombobox();
   initUnitCombobox();
 }
+
 function closeInputOldCoreModal() {
   const m = document.getElementById('inputOldCoreModal');
   if (m) m.classList.add('hidden');
   closeSkhqComboboxDropdown();
   closeUnitComboboxDropdown();
-}
-function closeInputOldCoreModal() {
-  const m = document.getElementById('inputOldCoreModal');
-  if (m) m.classList.add('hidden');
-  closeSkhqComboboxDropdown();
 }
 
 function toggleQuickSearchModal() {
