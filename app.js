@@ -260,6 +260,11 @@ async function fetchSiteData(site, suppressToast = false) {
   }
   setSyncStatus('Synchronizing with Central Server...');
 
+  // Simpan identitas Part Number yang sedang dipilih sebelum refresh (jika ada)
+  const previousSelectedPn = (currentPartIndex >= 0 && masterStockData[currentPartIndex])
+    ? (masterStockData[currentPartIndex].cleanPn || masterStockData[currentPartIndex].partNumber)
+    : null;
+
   try {
     const response = await fetch(`${API_URL}?action=GET_ALL_DATA&site=${site}`);
     const json = await response.json();
@@ -288,8 +293,29 @@ async function fetchSiteData(site, suppressToast = false) {
     setSyncStatus('Offline Mode / Connection Lost');
   }
 
-  currentPartIndex = -1;
-  initPartCombobox();
+  // Pulihkan pilihan Part Number sebelumnya jika masih ada di site yang sama
+  if (previousSelectedPn) {
+    const restoredIdx = masterStockData.findIndex(
+      item => (item.cleanPn || item.partNumber) === previousSelectedPn
+    );
+    if (restoredIdx !== -1) {
+      currentPartIndex = restoredIdx;
+      const restoredItem = masterStockData[restoredIdx];
+      const inp = document.getElementById('partComboboxInput');
+      if (inp && restoredItem) {
+        inp.value = `${restoredItem.cleanPn || restoredItem.partNumber} - ${restoredItem.partDescription}`;
+      }
+      updateClearButtonVisibility();
+      filterPartCombobox(inp ? inp.value : '');
+    } else {
+      currentPartIndex = -1;
+      initPartCombobox();
+    }
+  } else {
+    currentPartIndex = -1;
+    initPartCombobox();
+  }
+
   initSkhqCombobox();
   renderStockCard();
   renderOldCoreTable();
