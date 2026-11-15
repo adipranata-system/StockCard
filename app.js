@@ -255,15 +255,15 @@ function switchSite(siteKey) {
  * ============================================================================
  */
 async function fetchSiteData(site, suppressToast = false) {
+  // Simpan Part Number yang sedang dipilih saat ini jika mode refresh/update aktif
+  const selectedCleanPn = (suppressToast && currentPartIndex >= 0 && masterStockData[currentPartIndex])
+    ? (masterStockData[currentPartIndex].cleanPn || masterStockData[currentPartIndex].partNumber)
+    : null;
+
   if (!suppressToast) {
     showToast(`Connecting to Site ${site} Database...`, 'info');
   }
   setSyncStatus('Synchronizing with Central Server...');
-
-  // Simpan identitas Part Number yang sedang dipilih sebelum refresh (jika ada)
-  const previousSelectedPn = (currentPartIndex >= 0 && masterStockData[currentPartIndex])
-    ? (masterStockData[currentPartIndex].cleanPn || masterStockData[currentPartIndex].partNumber)
-    : null;
 
   try {
     const response = await fetch(`${API_URL}?action=GET_ALL_DATA&site=${site}`);
@@ -293,27 +293,22 @@ async function fetchSiteData(site, suppressToast = false) {
     setSyncStatus('Offline Mode / Connection Lost');
   }
 
-  // Pulihkan pilihan Part Number sebelumnya jika masih ada di site yang sama
-  if (previousSelectedPn) {
-    const restoredIdx = masterStockData.findIndex(
-      item => (item.cleanPn || item.partNumber) === previousSelectedPn
-    );
-    if (restoredIdx !== -1) {
-      currentPartIndex = restoredIdx;
-      const restoredItem = masterStockData[restoredIdx];
-      const inp = document.getElementById('partComboboxInput');
-      if (inp && restoredItem) {
-        inp.value = `${restoredItem.cleanPn || restoredItem.partNumber} - ${restoredItem.partDescription}`;
-      }
-      updateClearButtonVisibility();
-      filterPartCombobox(inp ? inp.value : '');
-    } else {
-      currentPartIndex = -1;
-      initPartCombobox();
-    }
+  // Pulihkan posisi part yang dipilih jika sedang me-refresh data, atau kosongkan jika awal masuk
+  if (selectedCleanPn) {
+    currentPartIndex = masterStockData.findIndex(p => (p.cleanPn || p.partNumber) === selectedCleanPn);
   } else {
     currentPartIndex = -1;
-    initPartCombobox();
+  }
+
+  initPartCombobox();
+
+  if (currentPartIndex >= 0 && masterStockData[currentPartIndex]) {
+    const cur = masterStockData[currentPartIndex];
+    const inp = document.getElementById('partComboboxInput');
+    if (inp) {
+      inp.value = `${cur.cleanPn || cur.partNumber} - ${cur.partDescription}`;
+    }
+    updateClearButtonVisibility();
   }
 
   initSkhqCombobox();
@@ -1657,7 +1652,7 @@ async function saveNewOldCore(e) {
 
 /**
  * ============================================================================
- * 7. DISPATCH OLD CORE TO SKHQ & PRINT SPB
+ * 7. DISPATCH OLD CORE TO SKHQ & PRINT SPB (ZERO-LATENCY CORPORATE A4)
  * ============================================================================
  */
 function openSendToSkhqModal(targetCoreId = null) {
@@ -1800,33 +1795,47 @@ function openPrintManifestModalForSj(sjNumber) {
 
   const docNo = document.getElementById('manifestDocNumber');
   const docDate = document.getElementById('manifestDocDate');
+  const totalSummaryElem = document.getElementById('manifestTotalSummary');
+  const totalQtyElem = document.getElementById('manifestTotalQty');
   const tbody = document.getElementById('manifestTableBody');
 
   if (docNo) docNo.textContent = sjNumber;
   if (docDate) docDate.textContent = formatDateIndo(items[0].dateSent || new Date().toISOString().split('T')[0]);
 
+  let totalQty = 0;
+
   if (tbody) {
     tbody.innerHTML = '';
     items.forEach((item, idx) => {
+      const itemQty = parseFloat(item.qty) || 1;
+      totalQty += itemQty;
+
       const tr = document.createElement('tr');
-      tr.className = 'border-b border-slate-400 text-slate-900';
+      tr.className = 'border-b border-slate-800 text-slate-900';
       tr.innerHTML = `
-        <td class="py-2.5 px-1 border border-slate-400 text-center font-bold">${idx + 1}</td>
-        <td class="py-2.5 px-1.5 border border-slate-400 text-center">
+        <td class="py-2.5 px-1 border border-slate-800 text-center font-bold">${idx + 1}</td>
+        <td class="py-2.5 px-1.5 border border-slate-800 text-center">
           ${item.photoUrl ? `<img src="${item.photoUrl}" class="w-20 h-16 object-cover rounded mx-auto border border-slate-300 print-core-photo">` : `<span class="text-[10px] text-slate-400 font-bold">[No Photo]</span>`}
         </td>
-        <td class="py-2.5 px-2.5 border border-slate-400 break-words">
+        <td class="py-2.5 px-2.5 border border-slate-800 break-words">
           <div class="font-mono font-bold text-slate-950 text-xs">${item.cleanPn || item.partNumber}</div>
           <div class="font-semibold text-slate-700 text-[11px] leading-snug mt-0.5">${item.partDescription}</div>
           <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID Tag: ${item.id}</div>
         </td>
-        <td class="py-2.5 px-1 border border-slate-400 text-center font-mono font-black text-xs">${item.unitId}</td>
-        <td class="py-2.5 px-2 border border-slate-400 text-center font-mono font-bold text-[10.5px] tracking-tight text-orange-950 bg-orange-50/50 break-words">${item.sjSkhq}</td>
-        <td class="py-2.5 px-1 border border-slate-400 text-center font-bold text-xs">${item.qty}</td>
-        <td class="py-2.5 px-2.5 border border-slate-400 text-slate-700 text-[11px] leading-snug break-words">${item.condition}</td>
+        <td class="py-2.5 px-1 border border-slate-800 text-center font-mono font-black text-xs">${item.unitId}</td>
+        <td class="py-2.5 px-2 border border-slate-800 text-center font-mono font-bold text-[10.5px] tracking-tight text-orange-950 bg-orange-50/50 break-words">${item.sjSkhq}</td>
+        <td class="py-2.5 px-1 border border-slate-800 text-center font-black text-xs">${itemQty}</td>
+        <td class="py-2.5 px-2.5 border border-slate-800 text-slate-700 text-[11px] leading-snug break-words">${item.condition}</td>
       `;
       tbody.appendChild(tr);
     });
+  }
+
+  if (totalSummaryElem) {
+    totalSummaryElem.textContent = `${items.length} Line Item${items.length > 1 ? 's' : ''} (Total: ${totalQty} PC)`;
+  }
+  if (totalQtyElem) {
+    totalQtyElem.textContent = totalQty;
   }
 
   const modal = document.getElementById('printManifestModal');
@@ -1846,12 +1855,13 @@ function printManifestDocument() {
     window.print();
     return;
   }
+
+  // Mesin cetak mandiri 0-detik (Zero-Latency) dengan CSS lengkap tanpa ketergantungan CDN
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
       <title>SPB_${currentViewingManifestSj || 'OLDCORE'}</title>
-      <script src="https://cdn.tailwindcss.com"><\/script>
       <style>
         @page { size: A4 portrait; margin: 0; }
         * { box-sizing: border-box; }
@@ -1860,39 +1870,133 @@ function printManifestDocument() {
           padding: 12mm 14mm;
           background: #ffffff;
           color: #0f172a;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        /* Fallback layout CSS agar 100% presisi meski cetak berjalan cepat */
+        .hidden { display: none !important; }
         .flex { display: flex; }
+        .flex-col { flex-direction: column; }
         .justify-between { justify-content: space-between; }
         .items-start { align-items: flex-start; }
-        .gap-3 { gap: 0.75rem; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .shrink-0 { flex-shrink: 0; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
         .grid { display: grid; }
         .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .gap-4 { gap: 1rem; }
-        .gap-6 { gap: 1.5rem; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
-        .w-full { width: 100%; }
-        .table-fixed { table-layout: fixed; }
-        .border-collapse { border-collapse: collapse; }
-        .border { border: 1px solid #94a3b8; }
-        .border-slate-400 { border-color: #94a3b8; }
+        
+        /* Borders & Spacing */
+        .border-b-4 { border-bottom-width: 4px; }
+        .border-double { border-bottom-style: double; }
+        .border-2 { border: 2px solid #0f172a; }
+        .border { border: 1px solid #1e293b; }
+        .border-b { border-bottom: 1px solid #1e293b; }
+        .border-t { border-top: 1px solid #cbd5e1; }
+        .border-t-2 { border-top: 2px solid #1e293b; }
+        .border-b-2 { border-bottom: 2px solid #1e293b; }
         .border-slate-900 { border-color: #0f172a; }
         .border-slate-800 { border-color: #1e293b; }
+        .border-slate-400 { border-color: #94a3b8; }
         .border-slate-300 { border-color: #cbd5e1; }
-        .border-slate-200 { border-color: #e2e8f0; }
-        .border-b-2 { border-bottom-width: 2px; border-bottom-style: solid; }
-        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
-        .border-t { border-top-width: 1px; border-top-style: solid; }
-        .mb-14 { margin-bottom: 3.5rem; }
-        .w-4\\/5 { width: 80%; }
+        .rounded-lg { border-radius: 8px; }
+        .rounded-xl { border-radius: 12px; }
+        .rounded { border-radius: 4px; }
+        
+        .p-3 { padding: 12px; }
+        .px-3\\.5 { padding-left: 14px; padding-right: 14px; }
+        .px-3 { padding-left: 12px; padding-right: 12px; }
+        .px-2\\.5 { padding-left: 10px; padding-right: 10px; }
+        .px-2 { padding-left: 8px; padding-right: 8px; }
+        .px-1\\.5 { padding-left: 6px; padding-right: 6px; }
+        .px-1 { padding-left: 4px; padding-right: 4px; }
+        .py-2\\.5 { padding-top: 10px; padding-bottom: 10px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .pb-3\\.5 { padding-bottom: 14px; }
+        .pt-0\\.5 { padding-top: 2px; }
+        .pt-1 { padding-top: 4px; }
+        .pt-2\\.5 { padding-top: 10px; }
+        .pl-1 { padding-left: 4px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-5 { margin-bottom: 20px; }
+        .mt-0\\.5 { margin-top: 2px; }
+        .mt-1 { margin-top: 4px; }
+        .mt-1\\.5 { margin-top: 6px; }
+        .mt-5 { margin-top: 20px; }
+        .mt-12 { margin-top: 48px; }
         .mx-auto { margin-left: auto; margin-right: auto; }
-        .print-core-photo { width: 76px; height: 60px; object-fit: cover; border-radius: 6px; }
+        .w-11\\/12 { width: 91.666667%; }
+        .w-full { width: 100%; }
+        
+        /* Backgrounds */
+        .bg-white { background-color: #ffffff; }
+        .bg-slate-50 { background-color: #f8fafc; }
+        .bg-slate-100 { background-color: #f1f5f9; }
+        .bg-slate-200 { background-color: #e2e8f0; }
+        .bg-rose-600 { background-color: #e11d48; }
+        .bg-orange-50\\/50 { background-color: #fff7ed; }
+        
+        /* Typography */
+        .font-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .font-black { font-weight: 900; }
+        .font-extrabold { font-weight: 800; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .italic { font-style: italic; }
+        .uppercase { text-transform: uppercase; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .leading-tight { line-height: 1.25; }
+        .leading-snug { line-height: 1.375; }
+        .leading-relaxed { line-height: 1.625; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .tracking-wide { letter-spacing: 0.025em; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+        
+        .text-2xl { font-size: 24px; }
+        .text-xl { font-size: 20px; }
+        .text-base { font-size: 16px; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .text-\\[11px\\] { font-size: 11px; }
+        .text-\\[10\\.5px\\] { font-size: 10.5px; }
+        .text-\\[10px\\] { font-size: 10px; }
+        .text-\\[9\\.5px\\] { font-size: 9.5px; }
+        .text-\\[9px\\] { font-size: 9px; }
+        
+        .text-white { color: #ffffff; }
+        .text-slate-950 { color: #020617; }
+        .text-slate-900 { color: #0f172a; }
+        .text-slate-800 { color: #1e293b; }
+        .text-slate-700 { color: #334155; }
+        .text-slate-600 { color: #475569; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-orange-700 { color: #c2410c; }
+        .text-orange-950 { color: #431407; }
+        
+        /* Logo & Photo Evidence */
+        .h-12 { height: 48px; }
+        .w-auto { width: auto; }
+        .w-12 { width: 48px; }
+        .object-contain { object-fit: contain; }
+        .print-core-photo, .w-20.h-16 { width: 76px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
+        
+        /* Table Layout */
+        table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+        .w-\\[5\\%\\] { width: 5%; }
+        .w-\\[13\\%\\] { width: 13%; }
+        .w-\\[26\\%\\] { width: 26%; }
+        .w-\\[8\\%\\] { width: 8%; }
+        .w-\\[23\\%\\] { width: 23%; }
+        .w-\\[6\\%\\] { width: 6%; }
+        .w-\\[19\\%\\] { width: 19%; }
+        .space-y-0\\.5 > * + * { margin-top: 2px; }
       </style>
     </head>
     <body>
@@ -1903,73 +2007,13 @@ function printManifestDocument() {
             window.focus();
             window.print();
             window.close();
-          }, 700);
+          }, 250);
         };
       <\/script>
     </body>
     </html>
   `);
   printWindow.document.close();
-}
-
-async function downloadManifestPdf() {
-  const element = document.getElementById('printableManifestDocument');
-  if (!element) return;
-  const sjName = currentViewingManifestSj || 'SPB-OLDCORE';
-  showToast('Generating A4 PDF file...', 'info');
-
-  // Buat wadah kloning A4 bersih di luar modal agar tidak terpotong scroll
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'fixed';
-  wrapper.style.left = '-9999px';
-  wrapper.style.top = '0';
-  wrapper.style.width = '794px'; // Lebar standar A4 portrait (96 DPI)
-  wrapper.style.background = '#ffffff';
-  wrapper.style.color = '#0f172a';
-  wrapper.style.padding = '32px 38px';
-  wrapper.style.zIndex = '-1';
-  wrapper.innerHTML = element.innerHTML;
-  document.body.appendChild(wrapper);
-
-  // Konversi gambar Google Drive ke Base64 pada elemen kloning
-  const imgElements = wrapper.querySelectorAll('.print-core-photo');
-  for (let i = 0; i < imgElements.length; i++) {
-    const img = imgElements[i];
-    if (img && img.src && !img.src.startsWith('data:image')) {
-      const match = img.src.match(/id=([-\w]+)/) || img.src.match(/[-\w]{25,}/);
-      if (match) {
-        const fileId = match[1] || match[0];
-        try {
-          const res = await fetch(`${API_URL}?action=GET_IMAGE_BASE64&fileId=${fileId}`);
-          const resJson = await res.json();
-          if (resJson.status === 'SUCCESS' && resJson.dataUri) {
-            img.src = resJson.dataUri;
-          }
-        } catch (err) {}
-      }
-    }
-  }
-
-  const opt = {
-    margin: [6, 6, 6, 6],
-    filename: `SPB_${sjName}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, allowTaint: true, windowWidth: 794 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  if (window.html2pdf) {
-    window.html2pdf().set(opt).from(wrapper).save().then(() => {
-      document.body.removeChild(wrapper);
-      showToast(`PDF Document ${sjName} downloaded!`, 'success');
-    }).catch(() => {
-      document.body.removeChild(wrapper);
-      printManifestDocument();
-    });
-  } else {
-    document.body.removeChild(wrapper);
-    printManifestDocument();
-  }
 }
 
 /**
