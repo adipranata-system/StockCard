@@ -1803,27 +1803,27 @@ function openPrintManifestModalForSj(sjNumber) {
   const tbody = document.getElementById('manifestTableBody');
 
   if (docNo) docNo.textContent = sjNumber;
-  if (docDate) docDate.textContent = `Date: ${formatDateIndo(items[0].dateSent || new Date().toISOString().split('T')[0])}`;
+  if (docDate) docDate.textContent = formatDateIndo(items[0].dateSent || new Date().toISOString().split('T')[0]);
 
   if (tbody) {
     tbody.innerHTML = '';
     items.forEach((item, idx) => {
       const tr = document.createElement('tr');
-      tr.className = 'border-b border-slate-300 text-slate-900';
+      tr.className = 'border-b border-slate-400 text-slate-900';
       tr.innerHTML = `
-        <td class="py-2.5 px-2 border border-slate-300 text-center font-bold">${idx + 1}</td>
-        <td class="py-2.5 px-2 border border-slate-300 text-center">
-          ${item.photoUrl ? `<img src="${item.photoUrl}" class="w-16 h-14 object-cover rounded mx-auto border border-slate-300 print-core-photo">` : `<span class="text-[10px] text-slate-400 font-bold">[📷 No Photo]</span>`}
+        <td class="py-2.5 px-1 border border-slate-400 text-center font-bold">${idx + 1}</td>
+        <td class="py-2.5 px-1.5 border border-slate-400 text-center">
+          ${item.photoUrl ? `<img src="${item.photoUrl}" class="w-20 h-16 object-cover rounded mx-auto border border-slate-300 print-core-photo">` : `<span class="text-[10px] text-slate-400 font-bold">[No Photo]</span>`}
         </td>
-        <td class="py-2.5 px-3 border border-slate-300">
-          <div class="font-mono font-bold text-slate-950">${item.cleanPn || item.partNumber}</div>
-          <div class="font-semibold text-slate-700">${item.partDescription}</div>
-          <div class="text-[10px] text-slate-500 font-mono">ID Tag: ${item.id}</div>
+        <td class="py-2.5 px-2.5 border border-slate-400 break-words">
+          <div class="font-mono font-bold text-slate-950 text-xs">${item.cleanPn || item.partNumber}</div>
+          <div class="font-semibold text-slate-700 text-[11px] leading-snug mt-0.5">${item.partDescription}</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID Tag: ${item.id}</div>
         </td>
-        <td class="py-2.5 px-2 border border-slate-300 text-center font-mono font-black">${item.unitId}</td>
-        <td class="py-2.5 px-2 border border-slate-300 text-center font-mono font-bold text-orange-950 bg-orange-50/50">${item.sjSkhq}</td>
-        <td class="py-2.5 px-2 border border-slate-300 text-center font-bold">${item.qty}</td>
-        <td class="py-2.5 px-3 border border-slate-300 text-slate-600">${item.condition}</td>
+        <td class="py-2.5 px-1 border border-slate-400 text-center font-mono font-black text-xs">${item.unitId}</td>
+        <td class="py-2.5 px-2 border border-slate-400 text-center font-mono font-bold text-[10.5px] tracking-tight text-orange-950 bg-orange-50/50 break-words">${item.sjSkhq}</td>
+        <td class="py-2.5 px-1 border border-slate-400 text-center font-bold text-xs">${item.qty}</td>
+        <td class="py-2.5 px-2.5 border border-slate-400 text-slate-700 text-[11px] leading-snug break-words">${item.condition}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1850,15 +1850,60 @@ function printManifestDocument() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>SPB Pengembalian Old Core</title>
+      <title>SPB_${currentViewingManifestSj || 'OLDCORE'}</title>
       <script src="https://cdn.tailwindcss.com"><\/script>
-      <style>@page { size: portrait; margin: 10mm; }</style>
+      <style>
+        @page { size: A4 portrait; margin: 0; }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          padding: 12mm 14mm;
+          background: #ffffff;
+          color: #0f172a;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        /* Fallback layout CSS agar 100% presisi meski cetak berjalan cepat */
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-start { align-items: flex-start; }
+        .gap-3 { gap: 0.75rem; }
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .w-full { width: 100%; }
+        .table-fixed { table-layout: fixed; }
+        .border-collapse { border-collapse: collapse; }
+        .border { border: 1px solid #94a3b8; }
+        .border-slate-400 { border-color: #94a3b8; }
+        .border-slate-900 { border-color: #0f172a; }
+        .border-slate-800 { border-color: #1e293b; }
+        .border-slate-300 { border-color: #cbd5e1; }
+        .border-slate-200 { border-color: #e2e8f0; }
+        .border-b-2 { border-bottom-width: 2px; border-bottom-style: solid; }
+        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+        .border-t { border-top-width: 1px; border-top-style: solid; }
+        .mb-14 { margin-bottom: 3.5rem; }
+        .w-4\\/5 { width: 80%; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .print-core-photo { width: 76px; height: 60px; object-fit: cover; border-radius: 6px; }
+      </style>
     </head>
-    <body class="p-6 bg-white text-slate-900">
+    <body>
       ${element.innerHTML}
       <script>
         window.onload = function() {
-          setTimeout(function() { window.print(); window.close(); }, 350);
+          setTimeout(function() {
+            window.focus();
+            window.print();
+            window.close();
+          }, 700);
         };
       <\/script>
     </body>
@@ -1871,9 +1916,23 @@ async function downloadManifestPdf() {
   const element = document.getElementById('printableManifestDocument');
   if (!element) return;
   const sjName = currentViewingManifestSj || 'SPB-OLDCORE';
-  showToast('Generating PDF file...', 'info');
+  showToast('Generating A4 PDF file...', 'info');
 
-  const imgElements = element.querySelectorAll('.print-core-photo');
+  // Buat wadah kloning A4 bersih di luar modal agar tidak terpotong scroll
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '794px'; // Lebar standar A4 portrait (96 DPI)
+  wrapper.style.background = '#ffffff';
+  wrapper.style.color = '#0f172a';
+  wrapper.style.padding = '32px 38px';
+  wrapper.style.zIndex = '-1';
+  wrapper.innerHTML = element.innerHTML;
+  document.body.appendChild(wrapper);
+
+  // Konversi gambar Google Drive ke Base64 pada elemen kloning
+  const imgElements = wrapper.querySelectorAll('.print-core-photo');
   for (let i = 0; i < imgElements.length; i++) {
     const img = imgElements[i];
     if (img && img.src && !img.src.startsWith('data:image')) {
@@ -1895,17 +1954,20 @@ async function downloadManifestPdf() {
     margin: [6, 6, 6, 6],
     filename: `SPB_${sjName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+    html2canvas: { scale: 2, useCORS: true, allowTaint: true, windowWidth: 794 },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   if (window.html2pdf) {
-    window.html2pdf().set(opt).from(element).save().then(() => {
+    window.html2pdf().set(opt).from(wrapper).save().then(() => {
+      document.body.removeChild(wrapper);
       showToast(`PDF Document ${sjName} downloaded!`, 'success');
     }).catch(() => {
+      document.body.removeChild(wrapper);
       printManifestDocument();
     });
   } else {
+    document.body.removeChild(wrapper);
     printManifestDocument();
   }
 }
