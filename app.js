@@ -710,9 +710,9 @@ function filterPartCombobox(query) {
 
   filteredPartList = masterStockData.filter(item => {
     if (!q) return true;
-    return (item.cleanPn || item.partNumber).toLowerCase().includes(q) ||
-           item.partDescription.toLowerCase().includes(q) ||
-           (item.binLoc || '').toLowerCase().includes(q);
+    return String(item.cleanPn || item.partNumber || '').toLowerCase().includes(q) ||
+           String(item.partDescription || '').toLowerCase().includes(q) ||
+           String(item.binLoc || '').toLowerCase().includes(q);
   });
 
   drop.innerHTML = '';
@@ -2239,6 +2239,75 @@ function handleFileSelect(e) {
   if (e.target.files && e.target.files[0]) stageSelectedFile(e.target.files[0]);
 }
 
+/**
+ * Membaca seluruh baris & sel Excel/CSV dengan mempertahankan angka "0" di depan
+ * (Leading Zero Preservation) pada Part Number, No Dokumen, Unit ID, dan Bin Location.
+ */
+function extractSheetRowsPreservingLeadingZeros(worksheet) {
+  if (!worksheet || !worksheet['!ref']) return [];
+
+  const range = XLSX.utils.decode_range(worksheet['!ref']);
+  const rows = [];
+  const textIdentifierCols = new Set();
+
+  // Kata kunci header kolom identitas teks yang tidak boleh dipangkas nol depannya
+  const textColKeywords = [
+    'part', 'manufacturer', 'defaultcode', 'product', 'item',
+    'reference', 'shipment', 'dokumen', 'spb', 'mr', 'sj',
+    'unit', 'bin', 'location', 'rak'
+  ];
+
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    const rowArr = [];
+    let hasAnyValue = false;
+
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = worksheet[cellAddress];
+
+      if (!cell || cell.v === undefined || cell.v === null) {
+        rowArr.push('');
+        continue;
+      }
+
+      hasAnyValue = true;
+      const formattedText = cell.w !== undefined ? String(cell.w).trim() : '';
+
+      // Deteksi indeks kolom identitas pada area header (10 baris pertama)
+      if (R - range.s.r < 10 && cell.t === 's') {
+        const normHeader = String(cell.v).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const isNumericOrDateCol = ['qty', 'quantity', 'done', 'demand', 'date', 'tanggal'].some(ex => normHeader.includes(ex));
+        if (!isNumericOrDateCol && textColKeywords.some(kw => normHeader.includes(kw))) {
+          textIdentifierCols.add(C);
+        }
+      }
+
+      if (cell.t === 's') {
+        // Sel bertipe String: pertahankan teks persis apa adanya
+        rowArr.push(String(cell.v));
+      } else if (cell.t === 'n') {
+        // Sel bertipe Number: pertahankan jika memiliki angka "0" di depan (misal "04214638")
+        if (/^0\d+$/.test(formattedText)) {
+          rowArr.push(formattedText);
+        } else if (textIdentifierCols.has(C) && formattedText && !formattedText.includes('/') && !formattedText.includes(':')) {
+          rowArr.push(formattedText);
+        } else {
+          // Pertahankan nilai numerik murni untuk Qty dan nomor serial tanggal Excel
+          rowArr.push(cell.v);
+        }
+      } else {
+        rowArr.push(formattedText || cell.v);
+      }
+    }
+
+    if (hasAnyValue) {
+      rows.push(rowArr);
+    }
+  }
+
+  return rows;
+}
+
 function stageSelectedFile(file) {
   stagedUploadFile = file;
   showToast(`Reading "${file.name}"...`, 'info');
@@ -2249,7 +2318,7 @@ function stageSelectedFile(file) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const rawRows = extractSheetRowsPreservingLeadingZeros(worksheet);
 
       if (!rawRows || rawRows.length < 2) {
         showToast('File contains no valid data rows.', 'warning');
@@ -2409,9 +2478,9 @@ function filterQuickSearch(query) {
   const q = query.toLowerCase().trim();
 
   const filtered = masterStockData.filter(item => {
-    return (item.cleanPn || item.partNumber).toLowerCase().includes(q) ||
-           item.partDescription.toLowerCase().includes(q) ||
-           (item.binLoc || '').toLowerCase().includes(q);
+    return String(item.cleanPn || item.partNumber || '').toLowerCase().includes(q) ||
+           String(item.partDescription || '').toLowerCase().includes(q) ||
+           String(item.binLoc || '').toLowerCase().includes(q);
   });
 
   if (filtered.length === 0) {
