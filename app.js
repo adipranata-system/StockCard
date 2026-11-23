@@ -2850,17 +2850,20 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
   if (!thead || !tbody) return;
 
   const colCount = activeDates.length;
+  const totalDayCols = colCount * 2;
+  const dayColWidth = (53.7 / Math.max(totalDayCols, 1)).toFixed(3) + '%';
+
   const dayHeadersHtml = activeDates.map(d => {
     const dayNum = d.split('-')[2] || d;
-    return `<th class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[11px] bg-slate-100">${dayNum}</th>`;
+    return `<th style="width:${dayColWidth};" class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[10.5px] bg-slate-100">${dayNum}</th>`;
   }).join('');
 
   thead.innerHTML = `
-    <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[11px]">
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[3%]">No</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[18%]">Item / Size</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[13%]">Aplikasi / Unit</th>
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[9.5%]">UOM</th>
+    <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[10.5px]">
+      <th rowspan="2" style="width:3.2%;" class="py-1.5 px-0.5 border border-slate-900 text-center">No</th>
+      <th rowspan="2" style="width:19.8%;" class="py-1.5 px-1.5 border border-slate-900 text-left">Item / Size</th>
+      <th rowspan="2" style="width:14.5%;" class="py-1.5 px-1.5 border border-slate-900 text-left">Aplikasi / Unit</th>
+      <th rowspan="2" style="width:8.8%;" class="py-1.5 px-0.5 border border-slate-900 text-center">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-amber-100 text-slate-950 tracking-wider">STOCK</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-blue-100 text-slate-950 tracking-wider">OUT</th>
     </tr>
@@ -2889,7 +2892,7 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       const totalCols = 4 + (colCount * 2);
 
       const catTr = document.createElement('tr');
-      catTr.className = 'bg-slate-800 text-white font-black uppercase text-[11px] tracking-wider cat-divider-row';
+      catTr.className = 'bg-slate-800 text-white font-black uppercase text-[10.5px] tracking-wider cat-divider-row';
       catTr.innerHTML = `
         <td colspan="${totalCols}" class="py-1 px-2 border border-slate-900">${catTitle}</td>
       `;
@@ -2903,23 +2906,23 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       const cellClass = isZero
         ? 'bg-emerald-300 text-emerald-950 font-black zero-stock-cell'
         : 'bg-white text-slate-950 font-extrabold';
-      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[11px] ${cellClass}">${val}</td>`;
+      return `<td style="width:${dayColWidth};" class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[10.5px] ${cellClass}">${val}</td>`;
     }).join('');
 
     const outCellsHtml = row.outByDate.map(val => {
       if (val > 0) {
-        return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[11px] text-rose-900 bg-rose-50/60 out-active-cell">${val}</td>`;
+        return `<td style="width:${dayColWidth};" class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[10.5px] text-rose-900 bg-rose-50/60 out-active-cell">${val}</td>`;
       }
-      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[10.5px] text-slate-400">-</td>`;
+      return `<td style="width:${dayColWidth};" class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[10px] text-slate-400">-</td>`;
     }).join('');
 
     const tr = document.createElement('tr');
     tr.className = 'text-slate-900 border-b border-slate-900';
     tr.innerHTML = `
-      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-slate-700">${catSeqNo}</td>
-      <td class="py-1 px-1.5 border border-slate-900 font-sans font-extrabold text-slate-950 col-nowrap">${row.labelLaporan}</td>
-      <td class="py-1 px-1.5 border border-slate-900 font-sans font-semibold text-slate-800 col-nowrap">${row.aplikasiUnit}</td>
-      <td class="py-1 px-0.5 border border-slate-900 text-center font-sans font-bold text-[9.5px] bg-slate-50 col-nowrap col-uom">${row.satuan}</td>
+      <td style="width:3.2%;" class="py-1 px-0.5 border border-slate-900 text-center font-mono font-bold text-slate-700">${catSeqNo}</td>
+      <td style="width:19.8%;" class="py-1 px-1.5 border border-slate-900 font-sans font-extrabold text-slate-950 col-nowrap col-item">${row.labelLaporan}</td>
+      <td style="width:14.5%;" class="py-1 px-1.5 border border-slate-900 font-sans font-semibold text-slate-800 col-nowrap col-app">${row.aplikasiUnit}</td>
+      <td style="width:8.8%;" class="py-1 px-0.5 border border-slate-900 text-center font-sans font-bold text-[9px] bg-slate-50 col-nowrap col-uom">${row.satuan}</td>
       ${stockCellsHtml}
       ${outCellsHtml}
     `;
@@ -2945,7 +2948,7 @@ function printDailyCriticalReport() {
     <head>
       <title>Daily_Critical_Report_${currentSite}_${todayTag}</title>
       <style>
-        @page { size: A4 portrait; margin: 4.5mm 6mm; }
+        @page { size: A4 portrait; margin: 5mm 6mm; }
         * { box-sizing: border-box; }
         body {
           margin: 0;
@@ -3022,15 +3025,14 @@ function printDailyCriticalReport() {
         .leading-tight { line-height: 1.18; }
         .tracking-tight { letter-spacing: -0.02em; }
         .tracking-wider { letter-spacing: 0.04em; }
-        .break-words { overflow-wrap: break-word; word-wrap: break-word; }
-        .col-nowrap { white-space: nowrap; }
+        .col-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .text-lg, .sm\\:text-xl { font-size: 16px; }
-        .text-xs { font-size: 11px; }
-        .text-\\[11px\\] { font-size: 10.5px; }
-        .text-\\[10\\.5px\\] { font-size: 10px; }
-        .text-\\[10px\\] { font-size: 9.5px; }
-        .text-\\[9\\.5px\\] { font-size: 9px; }
+        .text-lg, .sm\\:text-xl { font-size: 15.5px; }
+        .text-xs { font-size: 10.5px; }
+        .text-\\[11px\\] { font-size: 10px; }
+        .text-\\[10\\.5px\\] { font-size: 9.5px; }
+        .text-\\[10px\\] { font-size: 9px; }
+        .text-\\[9\\.5px\\] { font-size: 8.5px; }
         .text-\\[9px\\] { font-size: 8.5px; }
 
         .text-white { color: #ffffff; }
@@ -3048,32 +3050,41 @@ function printDailyCriticalReport() {
         .object-contain { object-fit: contain; }
 
         table { width: 100%; table-layout: fixed; border-collapse: collapse; }
-        #criticalReportTable th, #criticalReportTable td {
-          padding: 2.4px 3.5px !important;
-          line-height: 1.16 !important;
-          font-size: 10.5px !important;
+        #criticalReportTable th {
+          padding: 2.8px 2px !important;
+          line-height: 1.15 !important;
+          font-size: 9.5px !important;
         }
-        #criticalReportTable td.col-nowrap {
-          font-size: 10px !important;
+        #criticalReportTable td {
+          padding: 2.3px 2px !important;
+          line-height: 1.15 !important;
+          font-size: 9.5px !important;
+        }
+        #criticalReportTable td.col-item {
+          padding-left: 4px !important;
+          padding-right: 3px !important;
+          font-size: 9.5px !important;
           letter-spacing: -0.015em;
         }
-        #criticalReportTable td.col-uom {
+        #criticalReportTable td.col-app {
+          padding-left: 4px !important;
+          padding-right: 3px !important;
           font-size: 9px !important;
-          padding-left: 2px !important;
-          padding-right: 2px !important;
+          letter-spacing: -0.01em;
+        }
+        #criticalReportTable td.col-uom {
+          padding-left: 1.5px !important;
+          padding-right: 1.5px !important;
+          font-size: 8.5px !important;
           letter-spacing: -0.02em;
         }
         #criticalReportTable td.font-mono {
-          font-size: 11px !important;
+          font-size: 10.5px !important;
         }
         #criticalReportTable tr.cat-divider-row td {
           padding: 3px 6px !important;
-          font-size: 10px !important;
+          font-size: 9.5px !important;
         }
-        .w-\[3\%\] { width: 3%; }
-        .w-\[18\%\] { width: 18%; }
-        .w-\[13\%\] { width: 13%; }
-        .w-\[9\.5\%\] { width: 9.5%; }
         .space-y-0\\.5 > * + * { margin-top: 2px; }
         .mt-3.pt-2\\.5 { break-inside: avoid; page-break-inside: avoid; }
         @media (min-width: 640px) {
