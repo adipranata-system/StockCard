@@ -2708,13 +2708,19 @@ function doesStockItemMatchCriticalRule(stockItem, rule) {
   return keywords.some(kw => {
     const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // Pola ukuran ban (mengandung -R atau / seperti 29.5-R25, 265/65-R17, 31x10.50-R15)
-    if (/-R\d|\/\d/.test(kw)) {
-      const flexibleSizeRegex = new RegExp(`(^|[^0-9])${escapedKw.replace(/-/g, '-?')}([^0-9]|$)`);
+    // Pola ukuran ban (mengandung -R, X, atau / seperti 12.00-R24, 12.00-24, 23.1X26, 265/65-R17)
+    // Huruf "R" dan tanda hubung dibuat opsional agar ban radial (-R24) & bias (-24) otomatis tergabung
+    if (/-?R\d|\/\d|\dX\d/.test(kw)) {
+      const flexiblePattern = escapedKw
+        .replace(/-?R(\d)/g, '[-\\s]?R?[-\\s]?$1')
+        .replace(/(\d)X(\d)/g, '$1[-\\s]?[XR]?[-\\s]?$2')
+        .replace(/-/g, '[-\\s]?');
+      const flexibleSizeRegex = new RegExp(`(^|[^0-9])${flexiblePattern}([^0-9]|$)`);
       if (flexibleSizeRegex.test(combined)) return true;
 
-      const kwNoDash = kw.replace(/-/g, '');
-      return combinedNoDash.includes(kwNoDash);
+      const kwNoDashNoR = kw.replace(/-/g, '').replace(/R(\d)/g, '$1');
+      const combinedNoDashNoR = combinedNoDash.replace(/R(\d)/g, '$1');
+      return combinedNoDashNoR.includes(kwNoDashNoR);
     }
 
     // Pola kode part atau kekentalan oli (batas non-alfanumerik agar O2 tidak cocok ke CO2 & 10W tidak cocok ke 10W40)
@@ -2863,8 +2869,8 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       <th rowspan="2" style="width:3.2%;" class="py-1.5 px-0.5 border border-slate-900 text-center">No</th>
       <th rowspan="2" style="width:19.8%;" class="py-1.5 px-1.5 border border-slate-900 text-left">Item / Size</th>
       <th rowspan="2" style="width:14.5%;" class="py-1.5 px-1.5 border border-slate-900 text-left">Aplikasi / Unit</th>
-      <th rowspan="2" style="width:8.8%;" class="py-1.5 px-0.5 border border-slate-900 text-center">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-amber-100 text-slate-950 tracking-wider">STOCK</th>
+      <th rowspan="2" style="width:8.8%;" class="py-1.5 px-0.5 border-y border-x-2 border-slate-900 text-center bg-slate-200 uom-divider-col">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-blue-100 text-slate-950 tracking-wider">OUT</th>
     </tr>
     <tr>
@@ -2922,8 +2928,8 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       <td style="width:3.2%;" class="py-1 px-0.5 border border-slate-900 text-center font-mono font-bold text-slate-700">${catSeqNo}</td>
       <td style="width:19.8%;" class="py-1 px-1.5 border border-slate-900 font-sans font-extrabold text-slate-950 col-nowrap col-item">${row.labelLaporan}</td>
       <td style="width:14.5%;" class="py-1 px-1.5 border border-slate-900 font-sans font-semibold text-slate-800 col-nowrap col-app">${row.aplikasiUnit}</td>
-      <td style="width:8.8%;" class="py-1 px-0.5 border border-slate-900 text-center font-sans font-bold text-[9px] bg-slate-50 col-nowrap col-uom">${row.satuan}</td>
       ${stockCellsHtml}
+      <td style="width:8.8%;" class="py-1 px-0.5 border-y border-x-2 border-slate-900 text-center font-sans font-bold text-[9px] bg-slate-100 col-nowrap col-uom uom-divider-col">${row.satuan}</td>
       ${outCellsHtml}
     `;
     tbody.appendChild(tr);
@@ -3077,6 +3083,11 @@ function printDailyCriticalReport() {
           padding-right: 1.5px !important;
           font-size: 8.5px !important;
           letter-spacing: -0.02em;
+        }
+        #criticalReportTable .uom-divider-col {
+          border-left: 1.8px solid #0f172a !important;
+          border-right: 1.8px solid #0f172a !important;
+          background-color: #f1f5f9 !important;
         }
         #criticalReportTable td.font-mono {
           font-size: 10.5px !important;
