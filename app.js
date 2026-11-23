@@ -282,7 +282,7 @@ async function fetchSiteData(site, suppressToast = false) {
       calculateSkhqPendingList();
 
       const now = new Date();
-      const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+      const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
 
       if (masterStockData.length === 0 && oldCoreRegisterData.length === 0) {
         setSyncStatus(`Database Ready • No Transaction Data at Site ${site}`);
@@ -2858,7 +2858,7 @@ function renderDailyCriticalReportHeader(activeDates) {
   }
 
   const now = new Date();
-  const printTimeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+  const printTimeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
   if (genAtElem) {
     genAtElem.textContent = printTimeStr;
   }
