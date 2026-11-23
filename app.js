@@ -132,9 +132,9 @@ function applyUserSession(user) {
   const roleUpper = String(user.role || '').toUpperCase().trim();
   const siteUpper = String(user.site || '').toUpperCase().trim();
 
-  // Deteksi wewenang role VIEWER
+  // Deteksi wewenang role VIEWER & SUPERUSER (ADMIN disetarakan dengan STOREMAN: terkunci 1 site)
   const isViewer = roleUpper === 'VIEWER' || roleUpper.includes('VIEWER');
-  const isSuper = roleUpper.includes('SUPER') || roleUpper.includes('ADMIN') || siteUpper === 'ALL' || roleUpper.includes('PLANNER');
+  const isSuper = roleUpper.includes('SUPER') || siteUpper === 'ALL' || roleUpper.includes('PLANNER');
 
   // Pengaturan Tampilan Role Badge di Header
   const roleBadge = document.getElementById('headerRoleBadge');
@@ -238,7 +238,7 @@ function updateSiteVisuals() {
 function switchSite(siteKey) {
   const roleUpper = String(currentUser?.role || '').toUpperCase();
   const siteUpper = String(currentUser?.site || '').toUpperCase();
-  const isSuper = roleUpper.includes('SUPER') || roleUpper.includes('ADMIN') || siteUpper === 'ALL' || roleUpper.includes('PLANNER');
+  const isSuper = roleUpper.includes('SUPER') || siteUpper === 'ALL' || roleUpper.includes('PLANNER');
 
   if (!isSuper && siteUpper !== siteKey) {
     showToast('Access restricted to your assigned site.', 'warning');
@@ -282,7 +282,7 @@ async function fetchSiteData(site, suppressToast = false) {
       calculateSkhqPendingList();
 
       const now = new Date();
-      const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+      const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
 
       if (masterStockData.length === 0 && oldCoreRegisterData.length === 0) {
         setSyncStatus(`Database Ready • No Transaction Data at Site ${site}`);
@@ -2858,7 +2858,7 @@ function renderDailyCriticalReportHeader(activeDates) {
   }
 
   const now = new Date();
-  const printTimeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+  const printTimeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
   if (genAtElem) {
     genAtElem.textContent = printTimeStr;
   }
