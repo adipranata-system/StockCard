@@ -2857,10 +2857,10 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
 
   thead.innerHTML = `
     <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[9.5px]">
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[3.5%]">No</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[15.5%]">Item / Size</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[15%]">Aplikasi / Unit</th>
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[5%]">UOM</th>
+      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[3%]">No</th>
+      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[18.5%]">Item / Size</th>
+      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[14.5%]">Aplikasi / Unit</th>
+      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[7%]">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-amber-100 text-slate-950 tracking-wider">STOCK</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-blue-100 text-slate-950 tracking-wider">OUT</th>
     </tr>
@@ -2917,9 +2917,9 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
     tr.className = 'text-slate-900 border-b border-slate-900';
     tr.innerHTML = `
       <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-slate-600">${catSeqNo}</td>
-      <td class="py-1 px-1.5 border border-slate-900 font-mono font-black text-slate-950 break-words">${row.labelLaporan}</td>
+      <td class="py-1 px-1.5 border border-slate-900 font-mono font-black text-slate-950 col-nowrap">${row.labelLaporan}</td>
       <td class="py-1 px-1.5 border border-slate-900 font-semibold text-slate-700 break-words">${row.aplikasiUnit}</td>
-      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-[9px] bg-slate-50">${row.satuan}</td>
+      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-[9px] bg-slate-50 col-nowrap">${row.satuan}</td>
       ${stockCellsHtml}
       ${outCellsHtml}
     `;
@@ -2945,7 +2945,7 @@ function printDailyCriticalReport() {
     <head>
       <title>Daily_Critical_Report_${currentSite}_${todayTag}</title>
       <style>
-        @page { size: A4 portrait; margin: 8mm 9mm; }
+        @page { size: A4 portrait; margin: 5mm 7mm; }
         * { box-sizing: border-box; }
         body {
           margin: 0;
@@ -2965,35 +2965,35 @@ function printDailyCriticalReport() {
         .justify-center { justify-content: center; }
         .shrink-0 { flex-shrink: 0; }
         .gap-2 { gap: 8px; }
-        .gap-3 { gap: 12px; }
+        .gap-3 { gap: 10px; }
 
-        .border-b-4 { border-bottom-width: 4px; }
+        .border-b-4 { border-bottom-width: 3px; }
         .border-double { border-bottom-style: double; }
-        .border-2 { border: 2px solid #0f172a; }
+        .border-2 { border: 1.5px solid #0f172a; }
         .border { border: 1px solid #0f172a; }
         .border-t { border-top: 1px solid #cbd5e1; }
-        .border-t-2 { border-top: 2px solid #0f172a; }
+        .border-t-2 { border-top: 1.5px solid #0f172a; }
         .border-slate-900 { border-color: #0f172a; }
         .border-slate-800 { border-color: #1e293b; }
         .border-slate-300 { border-color: #cbd5e1; }
-        .rounded-lg { border-radius: 6px; }
-        .rounded-xl { border-radius: 10px; }
+        .rounded-lg { border-radius: 5px; }
+        .rounded-xl { border-radius: 8px; }
 
-        .px-3 { padding-left: 10px; padding-right: 10px; }
-        .px-2 { padding-left: 7px; padding-right: 7px; }
-        .px-1\\.5 { padding-left: 5px; padding-right: 5px; }
-        .px-1 { padding-left: 3px; padding-right: 3px; }
-        .px-0\\.5 { padding-left: 2px; padding-right: 2px; }
-        .py-2 { padding-top: 6px; padding-bottom: 6px; }
-        .py-1\\.5 { padding-top: 4px; padding-bottom: 4px; }
-        .py-1 { padding-top: 2.5px; padding-bottom: 2.5px; }
-        .pb-2\\.5 { padding-bottom: 8px; }
-        .pt-0\\.5 { padding-top: 2px; }
-        .pt-2\\.5 { padding-top: 8px; }
-        .mb-3 { margin-bottom: 10px; }
-        .mt-0\\.5 { margin-top: 2px; }
-        .mt-2 { margin-top: 6px; }
-        .mt-3 { margin-top: 10px; }
+        .px-3 { padding-left: 8px; padding-right: 8px; }
+        .px-2 { padding-left: 6px; padding-right: 6px; }
+        .px-1\\.5 { padding-left: 4px; padding-right: 4px; }
+        .px-1 { padding-left: 2.5px; padding-right: 2.5px; }
+        .px-0\\.5 { padding-left: 1.5px; padding-right: 1.5px; }
+        .py-2 { padding-top: 4px; padding-bottom: 4px; }
+        .py-1\\.5 { padding-top: 3px; padding-bottom: 3px; }
+        .py-1 { padding-top: 2px; padding-bottom: 2px; }
+        .pb-2\\.5 { padding-bottom: 5px; }
+        .pt-0\\.5 { padding-top: 1.5px; }
+        .pt-2\\.5 { padding-top: 5px; }
+        .mb-3 { margin-bottom: 6px; }
+        .mt-0\\.5 { margin-top: 1.5px; }
+        .mt-2 { margin-top: 4px; }
+        .mt-3 { margin-top: 6px; }
 
         .bg-white { background-color: #ffffff; }
         .bg-slate-50 { background-color: #f8fafc; }
@@ -3016,18 +3016,19 @@ function printDailyCriticalReport() {
         .text-left { text-align: left; }
         .text-center { text-align: center; }
         .text-right, .sm\\:text-right { text-align: right; }
-        .leading-tight { line-height: 1.2; }
+        .leading-tight { line-height: 1.15; }
         .tracking-tight { letter-spacing: -0.02em; }
         .tracking-wider { letter-spacing: 0.04em; }
         .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+        .col-nowrap { white-space: nowrap; }
 
-        .text-lg { font-size: 16px; }
-        .text-xs { font-size: 11px; }
-        .text-\\[11px\\] { font-size: 10px; }
-        .text-\\[10\\.5px\\] { font-size: 9.5px; }
-        .text-\\[10px\\] { font-size: 9px; }
-        .text-\\[9\\.5px\\] { font-size: 8.5px; }
-        .text-\\[9px\\] { font-size: 8px; }
+        .text-lg { font-size: 14px; }
+        .text-xs { font-size: 10px; }
+        .text-\\[11px\\] { font-size: 9px; }
+        .text-\\[10\\.5px\\] { font-size: 8.5px; }
+        .text-\\[10px\\] { font-size: 8.5px; }
+        .text-\\[9\\.5px\\] { font-size: 8px; }
+        .text-\\[9px\\] { font-size: 7.5px; }
 
         .text-white { color: #ffffff; }
         .text-slate-950 { color: #020617; }
@@ -3038,17 +3039,27 @@ function printDailyCriticalReport() {
         .text-slate-400 { color: #94a3b8; }
         .text-amber-800 { color: #92400e; }
 
-        .h-11 { height: 40px; }
-        .w-11 { width: 40px; }
+        .h-11 { height: 34px; }
+        .w-11 { width: 34px; }
         .w-auto { width: auto; }
         .object-contain { object-fit: contain; }
 
         table { width: 100%; table-layout: fixed; border-collapse: collapse; }
-        .w-\\[3\\.5\\%\\] { width: 3.5%; }
-        .w-\\[15\\.5\\%\\] { width: 15.5%; }
-        .w-\\[15\\%\\] { width: 15%; }
-        .w-\\[5\\%\\] { width: 5%; }
-        .space-y-0\\.5 > * + * { margin-top: 2px; }
+        #criticalReportTable th, #criticalReportTable td {
+          padding: 1.5px 3px !important;
+          line-height: 1.12 !important;
+          font-size: 8.5px !important;
+        }
+        #criticalReportTable tr.cat-divider-row td {
+          padding: 2px 6px !important;
+          font-size: 8.5px !important;
+        }
+        .w-\\[3\\%\\] { width: 3%; }
+        .w-\\[18\\.5\\%\\] { width: 18.5%; }
+        .w-\\[14\\.5\\%\\] { width: 14.5%; }
+        .w-\\[7\\%\\] { width: 7%; }
+        .space-y-0\\.5 > * + * { margin-top: 1.5px; }
+        .mt-3.pt-2\\.5 { break-inside: avoid; page-break-inside: avoid; }
         @media (min-width: 640px) {
           .sm\\:flex-row { flex-direction: row; }
           .sm\\:items-center { align-items: center; }
