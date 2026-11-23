@@ -2691,7 +2691,7 @@ function doesStockItemMatchCriticalRule(stockItem, rule) {
 
   // Pengecualian khusus kategori TABUNG agar aksesoris las tidak ikut terhitung
   if (kategori === 'TABUNG') {
-    if (/\b(REGULATOR|HOSE|SELANG|NOZZLE|TORCH|CUTTING TIP)\b/.test(combined)) {
+    if (/\b(REGULATOR|REG|FLASHBACK|ARRESTOR|ARESTER|GAUGE|MANOMETER|VALVE|HOSE|SELANG|NOZZLE|TORCH|CUTTING TIP|ADAPTOR|ADAPTER|FITTING|COUPLING|CLAMP|TROLLEY|KERETA)\b/.test(combined)) {
       return false;
     }
   }
@@ -2705,8 +2705,22 @@ function doesStockItemMatchCriticalRule(stockItem, rule) {
 
   const combinedNoDash = combined.replace(/-/g, '');
 
-  return keywords.some(kw => {
+  return keywords.some(rawKw => {
+    // Mendukung sintaks kunci Exact Match dengan tanda kurung siku "[...]" (contoh: "[C2H2]") di CriticalParts
+    if (rawKw.startsWith('[') && rawKw.endsWith(']') && rawKw.length > 2) {
+      const exactTarget = rawKw.slice(1, -1).trim();
+      return exactTarget !== '' && pn === exactTarget;
+    }
+
+    const kw = rawKw;
     const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Khusus kode gas tabung utama (O2, C2H2, AR, N2): wajib PN persis atau mengandung kata GAS
+    if (kategori === 'TABUNG' && ['O2', 'C2H2', 'AR', 'N2'].includes(kw)) {
+      if (pn === kw || pn === `GAS-${kw}` || pn === `GAS ${kw}`) return true;
+      const gasDescRegex = new RegExp(`(^|[^A-Z0-9])${escapedKw}([^A-Z0-9]|$)`);
+      return /\bGAS\b/.test(desc) && gasDescRegex.test(combined);
+    }
 
     // Pola ukuran ban (mengandung -R, X, atau / seperti 12.00-R24, 12.00-24, 23.1X26, 265/65-R17)
     // Huruf "R" dan tanda hubung dibuat opsional agar ban radial (-R24) & bias (-24) otomatis tergabung
