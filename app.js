@@ -2859,8 +2859,8 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
     <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[11px]">
       <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[3%]">No</th>
       <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[18%]">Item / Size</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[15%]">Aplikasi / Unit</th>
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[7.5%]">UOM</th>
+      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[13%]">Aplikasi / Unit</th>
+      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[9.5%]">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-amber-100 text-slate-950 tracking-wider">STOCK</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-blue-100 text-slate-950 tracking-wider">OUT</th>
     </tr>
@@ -2919,7 +2919,7 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-slate-700">${catSeqNo}</td>
       <td class="py-1 px-1.5 border border-slate-900 font-sans font-extrabold text-slate-950 col-nowrap">${row.labelLaporan}</td>
       <td class="py-1 px-1.5 border border-slate-900 font-sans font-semibold text-slate-800 col-nowrap">${row.aplikasiUnit}</td>
-      <td class="py-1 px-1 border border-slate-900 text-center font-sans font-bold text-[10px] bg-slate-50 col-nowrap">${row.satuan}</td>
+      <td class="py-1 px-0.5 border border-slate-900 text-center font-sans font-bold text-[9.5px] bg-slate-50 col-nowrap col-uom">${row.satuan}</td>
       ${stockCellsHtml}
       ${outCellsHtml}
     `;
@@ -3057,6 +3057,12 @@ function printDailyCriticalReport() {
           font-size: 10px !important;
           letter-spacing: -0.015em;
         }
+        #criticalReportTable td.col-uom {
+          font-size: 9px !important;
+          padding-left: 2px !important;
+          padding-right: 2px !important;
+          letter-spacing: -0.02em;
+        }
         #criticalReportTable td.font-mono {
           font-size: 11px !important;
         }
@@ -3064,10 +3070,10 @@ function printDailyCriticalReport() {
           padding: 3px 6px !important;
           font-size: 10px !important;
         }
-        .w-\\[3\\%\\] { width: 3%; }
-        .w-\\[18\\%\\] { width: 18%; }
-        .w-\\[15\\%\\] { width: 15%; }
-        .w-\\[7\\.5\\%\\] { width: 7.5%; }
+        .w-\[3\%\] { width: 3%; }
+        .w-\[18\%\] { width: 18%; }
+        .w-\[13\%\] { width: 13%; }
+        .w-\[9\.5\%\] { width: 9.5%; }
         .space-y-0\\.5 > * + * { margin-top: 2px; }
         .mt-3.pt-2\\.5 { break-inside: avoid; page-break-inside: avoid; }
         @media (min-width: 640px) {
