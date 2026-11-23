@@ -23,6 +23,7 @@ let oldCoreRegisterData = [];
 let masterEquipmentList = [];
 let skhqPendingList = [];
 let criticalPartsList = [];
+let backendSupportsCritical = false;
 
 // COMBOBOX NAVIGATION STATE
 let partComboboxIndex = -1;
@@ -274,6 +275,7 @@ async function fetchSiteData(site, suppressToast = false) {
       masterStockData = json.data.parts || [];
       oldCoreRegisterData = json.data.oldCores || [];
       masterEquipmentList = json.data.equipment || [];
+      backendSupportsCritical = Array.isArray(json.data.criticalParts);
       criticalPartsList = json.data.criticalParts || [];
 
       populateMasterEquipmentDatalist();
@@ -2585,9 +2587,28 @@ function setupKeyboardShortcuts() {
  * 11. DAILY CRITICAL STOCK REPORT (7 ACTIVE DAYS & A4 PRINT / SAVE PDF)
  * ============================================================================
  */
-function openDailyCriticalReportModal() {
+async function openDailyCriticalReportModal() {
+  // Jika belum termuat di memori, coba tarik langsung dari server saat tombol diklik
   if (!criticalPartsList || criticalPartsList.length === 0) {
-    showToast('Daftar CriticalParts belum tersedia atau kosong di Master Central.', 'warning');
+    showToast('Memuat master CriticalParts dari server...', 'info');
+    try {
+      const res = await fetch(`${API_URL}?action=GET_CRITICAL_PARTS&site=${currentSite}`);
+      const json = await res.json();
+      if (json.status === 'SUCCESS' && Array.isArray(json.data)) {
+        backendSupportsCritical = true;
+        criticalPartsList = json.data;
+      }
+    } catch (e) {
+      console.warn('Gagal fetch on-demand CriticalParts:', e);
+    }
+  }
+
+  if (!criticalPartsList || criticalPartsList.length === 0) {
+    if (!backendSupportsCritical) {
+      showToast('Backend GAS belum di-update ke New Version pada URL API aktif (Manage Deployments -> Edit -> New version).', 'warning');
+    } else {
+      showToast(`Sheet CriticalParts kosong atau tidak ada item AKTIF untuk site ${currentSite}.`, 'warning');
+    }
     return;
   }
 
