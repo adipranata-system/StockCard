@@ -2852,15 +2852,15 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
   const colCount = activeDates.length;
   const dayHeadersHtml = activeDates.map(d => {
     const dayNum = d.split('-')[2] || d;
-    return `<th class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[9.5px] bg-slate-100">${dayNum}</th>`;
+    return `<th class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[11px] bg-slate-100">${dayNum}</th>`;
   }).join('');
 
   thead.innerHTML = `
-    <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[9.5px]">
+    <tr class="bg-slate-200 text-slate-950 font-black uppercase text-[11px]">
       <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[3%]">No</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[18.5%]">Item / Size</th>
-      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[14.5%]">Aplikasi / Unit</th>
-      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[7%]">UOM</th>
+      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[18%]">Item / Size</th>
+      <th rowspan="2" class="py-1.5 px-1.5 border border-slate-900 text-left w-[15%]">Aplikasi / Unit</th>
+      <th rowspan="2" class="py-1.5 px-1 border border-slate-900 text-center w-[7.5%]">UOM</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-amber-100 text-slate-950 tracking-wider">STOCK</th>
       <th colspan="${colCount}" class="py-1 px-1 border border-slate-900 text-center bg-blue-100 text-slate-950 tracking-wider">OUT</th>
     </tr>
@@ -2889,7 +2889,7 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       const totalCols = 4 + (colCount * 2);
 
       const catTr = document.createElement('tr');
-      catTr.className = 'bg-slate-800 text-white font-black uppercase text-[9.5px] tracking-wider cat-divider-row';
+      catTr.className = 'bg-slate-800 text-white font-black uppercase text-[11px] tracking-wider cat-divider-row';
       catTr.innerHTML = `
         <td colspan="${totalCols}" class="py-1 px-2 border border-slate-900">${catTitle}</td>
       `;
@@ -2902,24 +2902,24 @@ function renderDailyCriticalReportTable(activeDates, reportRows) {
       const isZero = val === 0;
       const cellClass = isZero
         ? 'bg-emerald-300 text-emerald-950 font-black zero-stock-cell'
-        : 'bg-white text-slate-900 font-bold';
-      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[10px] ${cellClass}">${val}</td>`;
+        : 'bg-white text-slate-950 font-extrabold';
+      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[11px] ${cellClass}">${val}</td>`;
     }).join('');
 
     const outCellsHtml = row.outByDate.map(val => {
       if (val > 0) {
-        return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[10px] text-rose-900 bg-rose-50/60 out-active-cell">${val}</td>`;
+        return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono font-black text-[11px] text-rose-900 bg-rose-50/60 out-active-cell">${val}</td>`;
       }
-      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[9.5px] text-slate-400">-</td>`;
+      return `<td class="py-1 px-0.5 border border-slate-900 text-center font-mono text-[10.5px] text-slate-400">-</td>`;
     }).join('');
 
     const tr = document.createElement('tr');
     tr.className = 'text-slate-900 border-b border-slate-900';
     tr.innerHTML = `
-      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-slate-600">${catSeqNo}</td>
-      <td class="py-1 px-1.5 border border-slate-900 font-mono font-black text-slate-950 col-nowrap">${row.labelLaporan}</td>
-      <td class="py-1 px-1.5 border border-slate-900 font-semibold text-slate-700 break-words">${row.aplikasiUnit}</td>
-      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-[9px] bg-slate-50 col-nowrap">${row.satuan}</td>
+      <td class="py-1 px-1 border border-slate-900 text-center font-mono font-bold text-slate-700">${catSeqNo}</td>
+      <td class="py-1 px-1.5 border border-slate-900 font-sans font-extrabold text-slate-950 col-nowrap">${row.labelLaporan}</td>
+      <td class="py-1 px-1.5 border border-slate-900 font-sans font-semibold text-slate-800 col-nowrap">${row.aplikasiUnit}</td>
+      <td class="py-1 px-1 border border-slate-900 text-center font-sans font-bold text-[10px] bg-slate-50 col-nowrap">${row.satuan}</td>
       ${stockCellsHtml}
       ${outCellsHtml}
     `;
@@ -2945,7 +2945,7 @@ function printDailyCriticalReport() {
     <head>
       <title>Daily_Critical_Report_${currentSite}_${todayTag}</title>
       <style>
-        @page { size: A4 portrait; margin: 5mm 7mm; }
+        @page { size: A4 portrait; margin: 4.5mm 6mm; }
         * { box-sizing: border-box; }
         body {
           margin: 0;
@@ -2976,24 +2976,25 @@ function printDailyCriticalReport() {
         .border-slate-900 { border-color: #0f172a; }
         .border-slate-800 { border-color: #1e293b; }
         .border-slate-300 { border-color: #cbd5e1; }
-        .rounded-lg { border-radius: 5px; }
+        .rounded-lg { border-radius: 6px; }
         .rounded-xl { border-radius: 8px; }
 
+        .px-3\\.5 { padding-left: 10px; padding-right: 10px; }
         .px-3 { padding-left: 8px; padding-right: 8px; }
         .px-2 { padding-left: 6px; padding-right: 6px; }
         .px-1\\.5 { padding-left: 4px; padding-right: 4px; }
         .px-1 { padding-left: 2.5px; padding-right: 2.5px; }
         .px-0\\.5 { padding-left: 1.5px; padding-right: 1.5px; }
-        .py-2 { padding-top: 4px; padding-bottom: 4px; }
-        .py-1\\.5 { padding-top: 3px; padding-bottom: 3px; }
-        .py-1 { padding-top: 2px; padding-bottom: 2px; }
-        .pb-2\\.5 { padding-bottom: 5px; }
-        .pt-0\\.5 { padding-top: 1.5px; }
-        .pt-2\\.5 { padding-top: 5px; }
-        .mb-3 { margin-bottom: 6px; }
-        .mt-0\\.5 { margin-top: 1.5px; }
+        .py-2 { padding-top: 5px; padding-bottom: 5px; }
+        .py-1\\.5 { padding-top: 3.5px; padding-bottom: 3.5px; }
+        .py-1 { padding-top: 2.5px; padding-bottom: 2.5px; }
+        .pb-2\\.5 { padding-bottom: 6px; }
+        .pt-0\\.5 { padding-top: 2px; }
+        .pt-2\\.5 { padding-top: 6px; }
+        .mb-3 { margin-bottom: 7px; }
+        .mt-0\\.5 { margin-top: 2px; }
         .mt-2 { margin-top: 4px; }
-        .mt-3 { margin-top: 6px; }
+        .mt-3 { margin-top: 7px; }
 
         .bg-white { background-color: #ffffff; }
         .bg-slate-50 { background-color: #f8fafc; }
@@ -3006,8 +3007,10 @@ function printDailyCriticalReport() {
         .zero-stock-cell, .bg-emerald-300 { background-color: #86efac !important; color: #052e16 !important; font-weight: 900 !important; }
         .out-active-cell { background-color: #fff1f2 !important; color: #881337 !important; font-weight: 900 !important; }
 
-        .font-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .font-sans { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', 'Consolas', 'Courier New', monospace; }
         .font-black { font-weight: 900; }
+        .font-extrabold { font-weight: 800; }
         .font-bold { font-weight: 700; }
         .font-semibold { font-weight: 600; }
         .font-medium { font-weight: 500; }
@@ -3016,19 +3019,19 @@ function printDailyCriticalReport() {
         .text-left { text-align: left; }
         .text-center { text-align: center; }
         .text-right, .sm\\:text-right { text-align: right; }
-        .leading-tight { line-height: 1.15; }
+        .leading-tight { line-height: 1.18; }
         .tracking-tight { letter-spacing: -0.02em; }
         .tracking-wider { letter-spacing: 0.04em; }
         .break-words { overflow-wrap: break-word; word-wrap: break-word; }
         .col-nowrap { white-space: nowrap; }
 
-        .text-lg { font-size: 14px; }
-        .text-xs { font-size: 10px; }
-        .text-\\[11px\\] { font-size: 9px; }
-        .text-\\[10\\.5px\\] { font-size: 8.5px; }
-        .text-\\[10px\\] { font-size: 8.5px; }
-        .text-\\[9\\.5px\\] { font-size: 8px; }
-        .text-\\[9px\\] { font-size: 7.5px; }
+        .text-lg, .sm\\:text-xl { font-size: 16px; }
+        .text-xs { font-size: 11px; }
+        .text-\\[11px\\] { font-size: 10.5px; }
+        .text-\\[10\\.5px\\] { font-size: 10px; }
+        .text-\\[10px\\] { font-size: 9.5px; }
+        .text-\\[9\\.5px\\] { font-size: 9px; }
+        .text-\\[9px\\] { font-size: 8.5px; }
 
         .text-white { color: #ffffff; }
         .text-slate-950 { color: #020617; }
@@ -3039,26 +3042,33 @@ function printDailyCriticalReport() {
         .text-slate-400 { color: #94a3b8; }
         .text-amber-800 { color: #92400e; }
 
-        .h-11 { height: 34px; }
-        .w-11 { width: 34px; }
+        .h-12 { height: 38px; }
+        .w-12 { width: 38px; }
         .w-auto { width: auto; }
         .object-contain { object-fit: contain; }
 
         table { width: 100%; table-layout: fixed; border-collapse: collapse; }
         #criticalReportTable th, #criticalReportTable td {
-          padding: 1.5px 3px !important;
-          line-height: 1.12 !important;
-          font-size: 8.5px !important;
+          padding: 2.4px 3.5px !important;
+          line-height: 1.16 !important;
+          font-size: 10.5px !important;
+        }
+        #criticalReportTable td.col-nowrap {
+          font-size: 10px !important;
+          letter-spacing: -0.015em;
+        }
+        #criticalReportTable td.font-mono {
+          font-size: 11px !important;
         }
         #criticalReportTable tr.cat-divider-row td {
-          padding: 2px 6px !important;
-          font-size: 8.5px !important;
+          padding: 3px 6px !important;
+          font-size: 10px !important;
         }
         .w-\\[3\\%\\] { width: 3%; }
-        .w-\\[18\\.5\\%\\] { width: 18.5%; }
-        .w-\\[14\\.5\\%\\] { width: 14.5%; }
-        .w-\\[7\\%\\] { width: 7%; }
-        .space-y-0\\.5 > * + * { margin-top: 1.5px; }
+        .w-\\[18\\%\\] { width: 18%; }
+        .w-\\[15\\%\\] { width: 15%; }
+        .w-\\[7\\.5\\%\\] { width: 7.5%; }
+        .space-y-0\\.5 > * + * { margin-top: 2px; }
         .mt-3.pt-2\\.5 { break-inside: avoid; page-break-inside: avoid; }
         @media (min-width: 640px) {
           .sm\\:flex-row { flex-direction: row; }
