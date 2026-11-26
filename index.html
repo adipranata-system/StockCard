@@ -523,7 +523,7 @@
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
         <div>
           <div class="text-slate-200 font-bold text-xs sm:text-sm">
-            AP Systems - Digital Stock Card System v3.0
+            Digital Stock Card System v3.0 & Old Core Tracking (TNPN & TTLP)
           </div>
           <div class="text-xs text-slate-400 mt-0.5">
             Designed & Developed by: 
@@ -697,7 +697,7 @@
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
         <div>
           <div class="text-slate-200 font-bold text-xs sm:text-sm">
-            AP Systems - Digital Stock Card System v3.0
+            Digital Stock Card System v3.0 & Old Core Tracking (TNPN & TTLP)
           </div>
           <div class="text-xs text-slate-400 mt-0.5">
             Designed & Developed by: 
@@ -1174,63 +1174,63 @@
       <div id="printableManifestDocument" class="p-6 sm:p-8 overflow-y-auto ledger-scroll bg-white text-slate-900 font-sans flex-1">
         
         <!-- Kop Surat Garis Ganda & Kotak Identitas Dokumen -->
-        <div class="border-b-4 border-double border-slate-900 pb-3.5 mb-4 flex justify-between items-start gap-4">
-          <div class="flex items-start gap-3">
-            <img src="logo-ktc.png" alt="KTC" class="h-12 w-auto object-contain" onerror="this.onerror=null; this.classList.add('hidden'); document.getElementById('printFallbackBadge').classList.remove('hidden');">
-            <div id="printFallbackBadge" class="hidden h-12 w-12 bg-rose-600 text-white font-black text-2xl flex items-center justify-center rounded-xl">
+        <div class="border-b-4 border-double border-slate-900 pb-2.5 mb-3 flex justify-between items-center gap-3">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img src="logo-ktc.png" alt="KTC" class="h-11 w-auto object-contain shrink-0" onerror="this.onerror=null; this.classList.add('hidden'); document.getElementById('printFallbackBadge').classList.remove('hidden');">
+            <div id="printFallbackBadge" class="hidden h-11 w-11 bg-rose-600 text-white font-black text-xl flex items-center justify-center rounded-xl shrink-0">
               KTC
             </div>
-            <div>
-              <h1 class="text-xl font-black tracking-tight text-slate-950">PT. KTC COAL MINING & ENERGY</h1>
-              <p class="text-xs font-bold text-slate-700 mt-0.5" id="manifestSiteSubtitle">Plant & Warehouse Department - Logistics Site TNPN</p>
+            <div class="min-w-0">
+              <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-950 whitespace-nowrap leading-tight">PT. KTC COAL MINING & ENERGY</h1>
+              <p class="text-[11px] font-bold text-slate-700 mt-0.5 whitespace-nowrap" id="manifestSiteSubtitle">Plant & Warehouse Department - Logistics Site TNPN</p>
             </div>
           </div>
 
-          <div class="border-2 border-slate-900 rounded-lg px-3.5 py-2 bg-slate-50 text-right shrink-0">
-            <div class="text-[10px] uppercase font-black text-orange-700 tracking-wider leading-tight">SURAT PENGANTAR BARANG (SPB)</div>
-            <div class="text-[9px] uppercase font-bold text-slate-600 tracking-wide">OLD CORE RETURN MANIFEST</div>
-            <div id="manifestDocNumber" class="text-base font-mono font-black text-slate-950 mt-0.5">SPB-TNPN-01</div>
-            <div class="text-xs text-slate-700 mt-0.5 border-t border-slate-300 pt-0.5">Date: <span id="manifestDocDate" class="font-bold text-slate-950">-</span></div>
+          <div class="border-2 border-slate-900 rounded-lg px-2.5 py-1.5 bg-slate-50 text-right shrink-0">
+            <div class="text-[9.5px] uppercase font-black text-orange-700 tracking-wider leading-tight">SURAT PENGANTAR BARANG (SPB)</div>
+            <div class="text-[8.5px] uppercase font-bold text-slate-600 tracking-wide">OLD CORE RETURN MANIFEST</div>
+            <div id="manifestDocNumber" class="text-xs sm:text-sm font-mono font-black text-slate-950 mt-0.5 whitespace-nowrap">SPB-TNPN-01</div>
+            <div class="text-[10.5px] text-slate-700 mt-0.5 border-t border-slate-300 pt-0.5">Date: <span id="manifestDocDate" class="font-bold text-slate-950">-</span></div>
           </div>
         </div>
 
         <!-- Blok Tujuan & Ringkasan Muatan -->
-        <div class="grid grid-cols-2 gap-3 mb-4 text-xs">
-          <div class="p-3 bg-slate-50 border border-slate-800 rounded-lg">
-            <div class="text-slate-600 font-black uppercase text-[9.5px] tracking-wider">Destination:</div>
-            <div class="font-black text-slate-950 text-sm mt-0.5">CENTRAL LOGISTICS / SKHQ WAREHOUSE</div>
-            <div class="text-slate-700 text-[11px] mt-0.5">Attn: Component Recondition & Core Exchange Division</div>
+        <div class="grid grid-cols-2 gap-2.5 mb-3 text-xs">
+          <div class="p-2.5 bg-slate-50 border border-slate-800 rounded-lg">
+            <div class="text-slate-600 font-black uppercase text-[9px] tracking-wider">Destination:</div>
+            <div class="font-black text-slate-950 text-xs sm:text-sm mt-0.5">CENTRAL LOGISTICS / SKHQ WAREHOUSE</div>
+            <div class="text-slate-700 text-[10.5px] mt-0.5">Attn: Component Recondition & Core Exchange Division</div>
           </div>
-          <div class="p-3 bg-slate-50 border border-slate-800 rounded-lg">
-            <div class="text-slate-600 font-black uppercase text-[9.5px] tracking-wider">Transport & Shipment Summary:</div>
-            <div class="font-bold text-slate-800 mt-0.5 text-[11px]">Carrier: <span id="manifestTransporter" class="font-mono font-black text-slate-950">SITE LOGISTICS TRUCK</span></div>
-            <div class="font-bold text-slate-800 mt-0.5 text-[11px]">Cargo Summary: <span id="manifestTotalSummary" class="font-mono font-black text-slate-950">0 Item (0 PC)</span></div>
+          <div class="p-2.5 bg-slate-50 border border-slate-800 rounded-lg">
+            <div class="text-slate-600 font-black uppercase text-[9px] tracking-wider">Transport & Shipment Summary:</div>
+            <div class="font-bold text-slate-800 mt-0.5 text-[10.5px]">Carrier: <span id="manifestTransporter" class="font-mono font-black text-slate-950">SITE LOGISTICS TRUCK</span></div>
+            <div class="font-bold text-slate-800 mt-0.5 text-[10.5px]">Cargo Summary: <span id="manifestTotalSummary" class="font-mono font-black text-slate-950">0 Item (0 PC)</span></div>
           </div>
         </div>
 
         <!-- Tabel Utama SPB dengan Garis Pekat & Baris Rekap Total -->
-        <table class="w-full table-fixed text-left border-collapse border border-slate-800 text-xs mb-5">
+        <table class="w-full table-fixed text-left border-collapse border border-slate-800 text-xs mb-3.5">
           <thead>
-            <tr class="bg-slate-200 border-b-2 border-slate-800 text-slate-950 font-black uppercase font-mono text-[10px]">
-              <th class="py-2.5 px-1 border border-slate-800 text-center w-[5%]">No</th>
-              <th class="py-2.5 px-1.5 border border-slate-800 text-center w-[13%]">Photo Evidence</th>
-              <th class="py-2.5 px-2.5 border border-slate-800 w-[26%]">Part Number & Description</th>
-              <th class="py-2.5 px-1 border border-slate-800 text-center w-[8%]">Unit ID</th>
-              <th class="py-2.5 px-2 border border-slate-800 text-center w-[23%]">Origin SKHQ SPB</th>
-              <th class="py-2.5 px-1 border border-slate-800 text-center w-[6%]">Qty</th>
-              <th class="py-2.5 px-2.5 border border-slate-800 w-[19%]">Condition / Remarks</th>
+            <tr class="bg-slate-200 border-b-2 border-slate-800 text-slate-950 font-black uppercase font-mono text-[9.5px]">
+              <th class="py-2 px-1 border border-slate-800 text-center w-[4.5%]">No</th>
+              <th class="py-2 px-1 border border-slate-800 text-center w-[12%]">Photo Evidence</th>
+              <th class="py-2 px-2 border border-slate-800 w-[29.5%]">Part Number & Description</th>
+              <th class="py-2 px-1 border border-slate-800 text-center w-[7.5%]">Unit ID</th>
+              <th class="py-2 px-1.5 border border-slate-800 text-center w-[21.5%]">Origin SKHQ SPB</th>
+              <th class="py-2 px-1 border border-slate-800 text-center w-[5.5%]">Qty</th>
+              <th class="py-2 px-2 border border-slate-800 w-[19.5%]">Condition / Remarks</th>
             </tr>
           </thead>
           <tbody id="manifestTableBody" class="divide-y divide-slate-800"></tbody>
           <tfoot>
             <tr class="bg-slate-100 border-t-2 border-slate-800 font-mono text-xs text-slate-950">
-              <td colspan="5" class="py-2 px-3 border border-slate-800 text-right font-black uppercase tracking-wide">
+              <td colspan="5" class="py-1.5 px-2.5 border border-slate-800 text-right font-black uppercase tracking-wide text-[11px]">
                 TOTAL QUANTITY DISPATCHED
               </td>
-              <td id="manifestTotalQty" class="py-2 px-1 border border-slate-800 text-center font-black text-sm">
+              <td id="manifestTotalQty" class="py-1.5 px-1 border border-slate-800 text-center font-black text-xs">
                 0
               </td>
-              <td class="py-2 px-2.5 border border-slate-800 font-bold text-[10px] text-slate-700 uppercase">
+              <td class="py-1.5 px-2 border border-slate-800 font-bold text-[10px] text-slate-700 uppercase">
                 PC / UNIT
               </td>
             </tr>
@@ -1238,50 +1238,50 @@
         </table>
 
         <!-- Area Tanda Tangan Berbingkai Simetris (Nama & Tanggal) -->
-        <div class="grid grid-cols-3 gap-4 text-center text-xs pt-1">
-          <div class="border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
-            <div class="text-slate-700 font-bold text-[11px]">Disiapkan Oleh (Storeman Site):</div>
+        <div class="grid grid-cols-3 gap-3 text-center text-xs pt-0.5">
+          <div class="border border-slate-800 rounded-lg p-2.5 flex flex-col justify-between">
+            <div class="text-slate-700 font-bold text-[10.5px]">Disiapkan Oleh (Storeman Site):</div>
             <div>
-              <div class="mt-12 border-b border-slate-800 w-11/12 mx-auto"></div>
-              <div class="text-[10px] font-black text-slate-900 mt-1">Warehouse Site</div>
-              <div class="text-[9.5px] text-slate-700 text-left mt-1.5 pl-1 font-mono leading-relaxed">
-                <div>Nama : _____________________</div>
-                <div>Tgl &nbsp;: ____ / ____ / 2026</div>
+              <div class="mt-9 border-b border-slate-800 w-11/12 mx-auto"></div>
+              <div class="text-[9.5px] font-black text-slate-900 mt-1">Warehouse Site</div>
+              <div class="text-[9px] text-slate-700 text-left mt-1 pl-1 font-mono leading-snug whitespace-nowrap">
+                <div>Nama : ___________________</div>
+                <div>Tgl &nbsp;: ___ / ___ / 2026</div>
               </div>
             </div>
           </div>
 
-          <div class="border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
-            <div class="text-slate-700 font-bold text-[11px]">Diketahui Oleh (Supervisor Site):</div>
+          <div class="border border-slate-800 rounded-lg p-2.5 flex flex-col justify-between">
+            <div class="text-slate-700 font-bold text-[10.5px]">Diketahui Oleh (Supervisor Site):</div>
             <div>
-              <div class="mt-12 border-b border-slate-800 w-11/12 mx-auto"></div>
-              <div class="text-[10px] font-black text-slate-900 mt-1">Supervisor Site</div>
-              <div class="text-[9.5px] text-slate-700 text-left mt-1.5 pl-1 font-mono leading-relaxed">
-                <div>Nama : _____________________</div>
-                <div>Tgl &nbsp;: ____ / ____ / 2026</div>
+              <div class="mt-9 border-b border-slate-800 w-11/12 mx-auto"></div>
+              <div class="text-[9.5px] font-black text-slate-900 mt-1">Supervisor Site</div>
+              <div class="text-[9px] text-slate-700 text-left mt-1 pl-1 font-mono leading-snug whitespace-nowrap">
+                <div>Nama : ___________________</div>
+                <div>Tgl &nbsp;: ___ / ___ / 2026</div>
               </div>
             </div>
           </div>
 
-          <div class="border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
-            <div class="text-slate-700 font-bold text-[11px]">Diterima & Diverifikasi (SKHQ):</div>
+          <div class="border border-slate-800 rounded-lg p-2.5 flex flex-col justify-between">
+            <div class="text-slate-700 font-bold text-[10.5px]">Diterima & Diverifikasi (SKHQ):</div>
             <div>
-              <div class="mt-12 border-b border-slate-800 w-11/12 mx-auto"></div>
-              <div class="text-[10px] font-black text-slate-900 mt-1">Logistik SKHQ Pusat</div>
-              <div class="text-[9.5px] text-slate-700 text-left mt-1.5 pl-1 font-mono leading-relaxed">
-                <div>Nama : _____________________</div>
-                <div>Tgl &nbsp;: ____ / ____ / 2026</div>
+              <div class="mt-9 border-b border-slate-800 w-11/12 mx-auto"></div>
+              <div class="text-[9.5px] font-black text-slate-900 mt-1">Logistik SKHQ Pusat</div>
+              <div class="text-[9px] text-slate-700 text-left mt-1 pl-1 font-mono leading-snug whitespace-nowrap">
+                <div>Nama : ___________________</div>
+                <div>Tgl &nbsp;: ___ / ___ / 2026</div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Footer Resmi Sistem -->
-        <div class="mt-5 pt-2.5 border-t border-slate-400 text-center space-y-0.5">
-          <div class="text-[10px] text-slate-600 italic">
+        <div class="mt-3 pt-2 border-t border-slate-400 text-center space-y-0.5">
+          <div class="text-[9.5px] text-slate-600 italic">
             *This Goods Delivery Note (SPB) is valid as an official receipt of Core Exchange between Site Warehouse and Central Logistics (SKHQ).
           </div>
-          <div class="text-[10px] text-slate-700 font-medium">
+          <div class="text-[9.5px] text-slate-700 font-medium">
             System-generated document via <strong class="text-slate-950">Digital Stock Card System v3.0</strong> &bull; Designed &amp; Developed by <strong class="text-slate-950">Adi Pranata</strong>
           </div>
         </div>
