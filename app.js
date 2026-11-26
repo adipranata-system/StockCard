@@ -1817,19 +1817,19 @@ function openPrintManifestModalForSj(sjNumber) {
       const tr = document.createElement('tr');
       tr.className = 'border-b border-slate-800 text-slate-900';
       tr.innerHTML = `
-        <td class="py-2.5 px-1 border border-slate-800 text-center font-bold">${idx + 1}</td>
-        <td class="py-2.5 px-1.5 border border-slate-800 text-center">
-          ${item.photoUrl ? `<img src="${item.photoUrl}" class="w-20 h-16 object-cover rounded mx-auto border border-slate-300 print-core-photo">` : `<span class="text-[10px] text-slate-400 font-bold">[No Photo]</span>`}
+        <td class="py-1.5 px-1 border border-slate-800 text-center font-bold">${idx + 1}</td>
+        <td class="py-1.5 px-1 border border-slate-800 text-center">
+          ${item.photoUrl ? `<img src="${item.photoUrl}" class="w-16 h-12 object-cover rounded mx-auto border border-slate-300 print-core-photo">` : `<span class="text-[9.5px] text-slate-400 font-bold">[No Photo]</span>`}
         </td>
-        <td class="py-2.5 px-2.5 border border-slate-800 break-words">
-          <div class="font-mono font-bold text-slate-950 text-xs">${item.cleanPn || item.partNumber}</div>
-          <div class="font-semibold text-slate-700 text-[11px] leading-snug mt-0.5">${item.partDescription}</div>
-          <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID Tag: ${item.id}</div>
+        <td class="py-1.5 px-2 border border-slate-800 break-words">
+          <div class="font-mono font-bold text-slate-950 text-[11px] leading-tight">${item.cleanPn || item.partNumber}</div>
+          <div class="font-semibold text-slate-700 text-[10px] leading-tight mt-0.5">${item.partDescription}</div>
+          <div class="text-[9px] text-slate-500 font-mono mt-0.5">ID Tag: ${item.id}</div>
         </td>
-        <td class="py-2.5 px-1 border border-slate-800 text-center font-mono font-black text-xs">${item.unitId}</td>
-        <td class="py-2.5 px-2 border border-slate-800 text-center font-mono font-bold text-[10.5px] tracking-tight text-orange-950 bg-orange-50/50 break-words">${item.sjSkhq}</td>
-        <td class="py-2.5 px-1 border border-slate-800 text-center font-black text-xs">${itemQty}</td>
-        <td class="py-2.5 px-2.5 border border-slate-800 text-slate-700 text-[11px] leading-snug break-words">${item.condition}</td>
+        <td class="py-1.5 px-1 border border-slate-800 text-center font-mono font-black text-[11px]">${item.unitId}</td>
+        <td class="py-1.5 px-1.5 border border-slate-800 text-center font-mono font-bold text-[10px] tracking-tight text-orange-950 bg-orange-50/50 break-words">${item.sjSkhq}</td>
+        <td class="py-1.5 px-1 border border-slate-800 text-center font-black text-[11px]">${itemQty}</td>
+        <td class="py-1.5 px-2 border border-slate-800 text-slate-700 text-[10px] leading-tight break-words">${item.condition}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1871,7 +1871,7 @@ function printManifestDocument() {
         * { box-sizing: border-box; }
         body {
           margin: 0;
-          padding: 12mm 14mm;
+          padding: 9mm 11mm;
           background: #ffffff;
           color: #0f172a;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -1886,6 +1886,9 @@ function printManifestDocument() {
         .items-center { align-items: center; }
         .justify-center { justify-content: center; }
         .shrink-0 { flex-shrink: 0; }
+        .min-w-0 { min-width: 0; }
+        .whitespace-nowrap { white-space: nowrap; }
+        .gap-2\\.5 { gap: 10px; }
         .gap-3 { gap: 12px; }
         .gap-4 { gap: 16px; }
         .grid { display: grid; }
@@ -1909,27 +1912,24 @@ function printManifestDocument() {
         .rounded-xl { border-radius: 12px; }
         .rounded { border-radius: 4px; }
         
-        .p-3 { padding: 12px; }
-        .px-3\\.5 { padding-left: 14px; padding-right: 14px; }
-        .px-3 { padding-left: 12px; padding-right: 12px; }
+        .p-2\\.5 { padding: 9px; }
+        .p-3 { padding: 11px; }
         .px-2\\.5 { padding-left: 10px; padding-right: 10px; }
         .px-2 { padding-left: 8px; padding-right: 8px; }
         .px-1\\.5 { padding-left: 6px; padding-right: 6px; }
         .px-1 { padding-left: 4px; padding-right: 4px; }
-        .py-2\\.5 { padding-top: 10px; padding-bottom: 10px; }
-        .py-2 { padding-top: 8px; padding-bottom: 8px; }
-        .pb-3\\.5 { padding-bottom: 14px; }
+        .py-2 { padding-top: 7px; padding-bottom: 7px; }
+        .py-1\\.5 { padding-top: 5px; padding-bottom: 5px; }
+        .pb-2\\.5 { padding-bottom: 9px; }
         .pt-0\\.5 { padding-top: 2px; }
-        .pt-1 { padding-top: 4px; }
-        .pt-2\\.5 { padding-top: 10px; }
+        .pt-2 { padding-top: 7px; }
         .pl-1 { padding-left: 4px; }
-        .mb-4 { margin-bottom: 16px; }
-        .mb-5 { margin-bottom: 20px; }
+        .mb-3 { margin-bottom: 10px; }
+        .mb-3\\.5 { margin-bottom: 12px; }
         .mt-0\\.5 { margin-top: 2px; }
         .mt-1 { margin-top: 4px; }
-        .mt-1\\.5 { margin-top: 6px; }
-        .mt-5 { margin-top: 20px; }
-        .mt-12 { margin-top: 48px; }
+        .mt-3 { margin-top: 10px; }
+        .mt-9 { margin-top: 34px; }
         .mx-auto { margin-left: auto; margin-right: auto; }
         .w-11\\/12 { width: 91.666667%; }
         .w-full { width: 100%; }
@@ -1954,24 +1954,23 @@ function printManifestDocument() {
         .text-left { text-align: left; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .leading-tight { line-height: 1.25; }
-        .leading-snug { line-height: 1.375; }
-        .leading-relaxed { line-height: 1.625; }
+        .leading-tight { line-height: 1.2; }
+        .leading-snug { line-height: 1.35; }
         .tracking-tight { letter-spacing: -0.025em; }
         .tracking-wide { letter-spacing: 0.025em; }
         .tracking-wider { letter-spacing: 0.05em; }
         .break-words { overflow-wrap: break-word; word-wrap: break-word; }
         
-        .text-2xl { font-size: 24px; }
-        .text-xl { font-size: 20px; }
-        .text-base { font-size: 16px; }
-        .text-sm { font-size: 14px; }
-        .text-xs { font-size: 12px; }
+        .text-xl { font-size: 19px; }
+        .text-base, .sm\\:text-lg { font-size: 17px; }
+        .text-sm, .sm\\:text-sm { font-size: 13px; }
+        .text-xs { font-size: 11.5px; }
         .text-\\[11px\\] { font-size: 11px; }
         .text-\\[10\\.5px\\] { font-size: 10.5px; }
         .text-\\[10px\\] { font-size: 10px; }
         .text-\\[9\\.5px\\] { font-size: 9.5px; }
         .text-\\[9px\\] { font-size: 9px; }
+        .text-\\[8\\.5px\\] { font-size: 8.5px; }
         
         .text-white { color: #ffffff; }
         .text-slate-950 { color: #020617; }
@@ -1985,21 +1984,21 @@ function printManifestDocument() {
         .text-orange-950 { color: #431407; }
         
         /* Logo & Photo Evidence */
-        .h-12 { height: 48px; }
+        .h-11 { height: 42px; }
         .w-auto { width: auto; }
-        .w-12 { width: 48px; }
+        .w-11 { width: 42px; }
         .object-contain { object-fit: contain; }
-        .print-core-photo, .w-20.h-16 { width: 76px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
+        .print-core-photo, .w-16.h-12 { width: 64px; height: 48px; object-fit: cover; border-radius: 5px; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
         
         /* Table Layout */
         table { width: 100%; table-layout: fixed; border-collapse: collapse; }
-        .w-\\[5\\%\\] { width: 5%; }
-        .w-\\[13\\%\\] { width: 13%; }
-        .w-\\[26\\%\\] { width: 26%; }
-        .w-\\[8\\%\\] { width: 8%; }
-        .w-\\[23\\%\\] { width: 23%; }
-        .w-\\[6\\%\\] { width: 6%; }
-        .w-\\[19\\%\\] { width: 19%; }
+        .w-\\[4\\.5\\%\\] { width: 4.5%; }
+        .w-\\[12\\%\\] { width: 12%; }
+        .w-\\[29\\.5\\%\\] { width: 29.5%; }
+        .w-\\[7\\.5\\%\\] { width: 7.5%; }
+        .w-\\[21\\.5\\%\\] { width: 21.5%; }
+        .w-\\[5\\.5\\%\\] { width: 5.5%; }
+        .w-\\[19\\.5\\%\\] { width: 19.5%; }
         .space-y-0\\.5 > * + * { margin-top: 2px; }
       </style>
     </head>
