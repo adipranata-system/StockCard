@@ -2627,25 +2627,46 @@ function closeDailyCriticalReportModal() {
 }
 
 /**
- * Mengambil 7 tanggal transaksi aktif terakhir (urut kronologis lama -> terbaru)
+ * Mengambil 7 tanggal kalender berurutan hingga Kemarin (H-1) atau
+ * hingga tanggal transaksi terbaru jika hari ini sudah ada data masuk/keluar.
  */
 function getLastSevenActiveDates() {
-  const dateSet = new Set();
+  // Helper format tanggal lokal YYYY-MM-DD (anti pergeseran zona waktu UTC)
+  const toLocalYMD = (dObj) => {
+    const y = dObj.getFullYear();
+    const m = String(dObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
 
+  // Hitung tanggal Kemarin (H-1)
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = toLocalYMD(yesterday);
+
+  // Cari tanggal transaksi tertinggi yang tercatat di database
+  let maxDbDateStr = '';
   masterStockData.forEach(part => {
     (part.history || []).forEach(h => {
       const d = String(h.date || '').trim();
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-        dateSet.add(d);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d > maxDbDateStr) {
+        maxDbDateStr = d;
       }
     });
   });
 
-  const sortedDates = Array.from(dateSet).sort((a, b) => a.localeCompare(b));
-  if (sortedDates.length === 0) {
-    return [new Date().toISOString().split('T')[0]];
+  // Pilih tanggal akhir terbaru antara Kemarin (H-1) dan Transaksi Terakhir Database
+  const endDateStr = (maxDbDateStr && maxDbDateStr > yesterdayStr) ? maxDbDateStr : yesterdayStr;
+
+  // Bangun 7 hari kalender berurutan mundur dari endDateStr
+  const [ey, em, ed] = endDateStr.split('-').map(Number);
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const dt = new Date(ey, em - 1, ed - i);
+    dates.push(toLocalYMD(dt));
   }
-  return sortedDates.slice(-7);
+
+  return dates;
 }
 
 /**
